@@ -8,13 +8,17 @@ from TourII_UI import Ui_TourII
 from Flylist import Ui_Flylist
 from Gradelist import Ui_Gradelist
 from PyQt5 import QtWidgets, QtGui, QtPrintSupport, QtCore
-from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow, QMessageBox, QFileDialog, QHeaderView
 from PyQt5.Qt import QApplication, Qt
-from PyQt5.QtCore import QDate, QAbstractTableModel
+from PyQt5.QtCore import QDate, QAbstractTableModel, QModelIndex, QSortFilterProxyModel
 import sys
 import pickle
 from pathlib import Path
 
+headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'III тур', 'Результат',
+           'Место')
+tourI_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат', 'Место')
+tourII_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат', 'Место')
 
 class F4C(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -36,10 +40,15 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.statui = Static()
         self.infoui = Inform()
         self.tour = TourI()
-        self.tour.tableWidget.sortItems(8, order=Qt.AscendingOrder)
         self.tourII = TourII()
         self.gradelistui = GradeList()
         self.flylistui = FlyList()
+        self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tableView_2.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tableView_3.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tableView_4.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tour.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tourII.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table = None
         self.memberclass = ""
         self.tournumber = 'I'
@@ -77,14 +86,18 @@ class F4C(QMainWindow, Ui_MainWindow):
                                (self.lineEdit_7_0, self.lineEdit_7_1, self.lineEdit_7_2),
                                (self.lineEdit_8_0, self.lineEdit_8_1, self.lineEdit_8_2),
                                (self.lineEdit_9_0, self.lineEdit_9_1, self.lineEdit_9_2))
-        self.classes = {'F-4C': self.tableWidget, 'F-4C (Ю)': self.tableWidget_2, 'F-4H': self.tableWidget_3,
-                        'F-4G': self.tableWidget_4}
+        self.classes = {'F-4C': self.tableView, 'F-4C (Ю)': self.tableView_2, 'F-4H': self.tableView_3,
+                        'F-4G': self.tableView_4}
         self.set_start_date()
         self.set_end_date()
         self.pushButton.clicked.connect(self.get_data)
         self.pushButton_2.clicked.connect(self.qwestion)
         self.f4c_btn_2.clicked.connect(self.get_prog)
         self.f4c_btn.clicked.connect(self.get_info)
+        self.tableView.doubleClicked.connect(self.get_info)
+        self.tableView_2.doubleClicked.connect(self.get_info)
+        self.tableView_3.doubleClicked.connect(self.get_info)
+        self.tableView_4.doubleClicked.connect(self.get_info)
         self.f4c_btn_4.clicked.connect(self.get_static)
         self.f4c_btn_5.clicked.connect(self.tour_1_out)
         self.f4c_btn_6.clicked.connect(self.tour_2_out)
@@ -132,7 +145,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.action.triggered.connect(self.save_)
         self.action_2.triggered.connect(self.filein)
         self.action_3.triggered.connect(self.save_as)
-        self.action_4.triggered.connect(self.show_about)
+        self.about_action.triggered.connect(self.show_about)
         self.tabWidget.currentChanged.connect(self.change_tab)
         self.f4cui.buttonBox.accepted.connect(self.new_member)
         self.flyui.radioButton.clicked.connect(self.get_prog)
@@ -153,24 +166,60 @@ class F4C(QMainWindow, Ui_MainWindow):
                                                                           if self.memberclass == 'F-4H'
                                                                           else self.static_request))
         self.statui.buttonBox.clicked.connect(self.static_action)
-        self.action_4.triggered.connect(self.ok)
+        self.f4c_data =[]
+        self.f4cu_data = []
+        self.f4h_data = []
+        self.f4g_data = []
+        self.f4c_in_model = TableModel(headers, self.f4c_data)
+        self.f4c_model = QSortFilterProxyModel()
+        self.f4c_model.setSourceModel(self.f4c_in_model)
+        self.f4cu_in_model = TableModel(headers, self.f4cu_data)
+        self.f4cu_model = QSortFilterProxyModel()
+        self.f4cu_model.setSourceModel(self.f4cu_in_model)
+        self.f4h_in_model = TableModel(headers, self.f4h_data)
+        self.f4h_model = QSortFilterProxyModel()
+        self.f4h_model.setSourceModel(self.f4h_in_model)
+        self.f4g_in_model = TableModel(headers, self.f4g_data)
+        self.f4g_model = QSortFilterProxyModel()
+        self.f4g_model.setSourceModel(self.f4g_in_model)
+        self.dataclasses = {'F-4C': self.f4c_data, 'F-4C (Ю)': self.f4cu_data, 'F-4H': self.f4h_data,
+                            'F-4G': self.f4g_data}
+        self.models = {'F-4C': self.f4c_model, 'F-4C (Ю)': self.f4cu_model, 'F-4H': self.f4h_model,
+                       'F-4G':  self.f4g_model}
+        self.in_models = {'F-4C': self.f4c_in_model, 'F-4C (Ю)': self.f4cu_in_model, 'F-4H': self.f4h_in_model,
+                       'F-4G':  self.f4g_in_model}
+        for cls in self.classes:
+            table = self.classes[cls]
+            table.setModel(self.models[cls])
+            table.setSortingEnabled(True)
+            table.sortByColumn(10, Qt.AscendingOrder)
+        self.data = None
+        self.model = None
         if len(sys.argv) == 2:
             self.file_in = sys.argv[1]
             self.open_file()
 
-    # @staticmethod
+    @staticmethod
     def show_about(self):
         print('triggered')
         report_ = QMessageBox()
         report_.setWindowTitle("О программе")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         report_.setWindowIcon(icon)
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
                         ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ. Версия 2.0"')
         report_.setIcon(QMessageBox.Information)
         report_.setStandardButtons(QMessageBox.Ok)
         report_.exec_()
+
+
+    def set_members(self, cls):
+        data = self.dataclasses[cls]
+        for i in Member.items:
+            if i.cls == cls:
+                data.append([i.number, i.surname, i.name, i.region, i.prototype, None, None, None, None, None, None,
+                i.id])
 
     @staticmethod
     def error_(error_massage):
@@ -182,7 +231,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         error.exec_()
 
     def qwestion(self):
-        row = self.table.currentRow()
+        row = self.table.currentIndex().row()
         if row == -1:
             self.error_('Выберите участника!')
             return
@@ -199,37 +248,49 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.del_member()
 
     def del_member(self):
-        row = self.table.currentRow()
-        item = int(self.table.item(row, 11).text())
+        row = self.table.currentIndex().row()
+        data = self.dataclasses[self.memberclass]
+        model = self.in_models[self.memberclass]
+        member_id = data[row][11]
+
         for i in Member.items:
-            if int(i.id) == item:
+            if i.id == member_id:
                 Member.items.remove(i)
-                self.table.removeRow(row)
+                del data[row]
+                model.setItems(data)
 
     def set_f4c(self):
         self.memberclass = 'F-4C'
-        self.table = self.tableWidget
+        self.table = self.tableView
+        self.data = self.f4c_data
+        self.model = self.f4c_in_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(False)
         self.statui.dsb_bonus.setEnabled(False)
 
     def set_f4cu(self):
         self.memberclass = 'F-4C (Ю)'
-        self.table = self.tableWidget_2
+        self.table = self.tableView_2
+        self.data = self.f4cu_data
+        self.model = self.f4cu_in_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(False)
         self.statui.dsb_bonus.setEnabled(False)
 
     def set_f4h(self):
         self.memberclass = 'F-4H'
-        self.table = self.tableWidget_3
+        self.table = self.tableView_3
+        self.data = self.f4h_data
+        self.model = self.f4h_in_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(False)
         self.statui.dsb_bonus.setEnabled(True)
 
     def set_f4g(self):
         self.memberclass = 'F-4G'
-        self.table = self.tableWidget_4
+        self.table = self.tableView_4
+        self.data = self.f4g_data
+        self.model = self.f4g_in_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(True)
         self.statui.dsb_bonus.setEnabled(False)
@@ -289,15 +350,17 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.error_('Укажите номер участника')
             self.get_data()
             return
-        row = self.table.rowCount()
-        for i in range(row):
-            if int(self.table.item(i, 0).text()) == self.f4cui.spinBox.value():
+        data = self.dataclasses[self.memberclass]
+        model = self.in_models[self.memberclass]
+        for rows in data:
+            if rows[0] == self.f4cui.spinBox.value():
                 self.error_('Участник с таким номером уже зарегистрирован в этом классе')
                 self.get_data()
                 return
         self.count_id += 1
         a = f'member_{str(self.count_id)}'
         globals()[a] = Member(self.memberclass)
+        globals()[a].cls = self.memberclass
         globals()[a].number = self.f4cui.spinBox.value()
         globals()[a].surname = self.f4cui.lineEdit_2.text()
         globals()[a].name = self.f4cui.lineEdit_3.text()
@@ -307,26 +370,9 @@ class F4C(QMainWindow, Ui_MainWindow):
         globals()[a].speed = self.f4cui.lineEdit_7.text()
         globals()[a].id = self.count_id
 
-        self.table.insertRow(row)
-        item = QtWidgets.QTableWidgetItem()
-        item.setData(QtCore.Qt.EditRole, (self.count_id))
-        self.table.setItem(row, 11, item)
-        # table.item(row, 11).setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255)))
-        item = QtWidgets.QTableWidgetItem()
-        item.setData(QtCore.Qt.EditRole, (globals()[a].surname))
-        self.table.setItem(row, 1, item)
-        item = QtWidgets.QTableWidgetItem()
-        item.setData(QtCore.Qt.EditRole, (globals()[a].name))
-        self.table.setItem(row, 2, item)
-        item = QtWidgets.QTableWidgetItem()
-        item.setData(QtCore.Qt.EditRole, (globals()[a].region))
-        self.table.setItem(row, 3, item)
-        item = QtWidgets.QTableWidgetItem()
-        item.setData(QtCore.Qt.EditRole, (globals()[a].prototype))
-        self.table.setItem(row, 4, item)
-        item = QtWidgets.QTableWidgetItem()
-        item.setData(QtCore.Qt.EditRole, (globals()[a].number))
-        self.table.setItem(row, 0, item)
+        data.append([globals()[a].number, globals()[a].surname, globals()[a].name, globals()[a].region,
+                    globals()[a].prototype, None, None, None, None, None, None, globals()[a].id])
+        model.setItems(data)
 
     def set_start_date(self):
         self.locate_data.start_date = self.dateEdit.date()
@@ -335,16 +381,12 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.locate_data.end_date = self.dateEdit_2.date()
 
     def get_prog(self):
-        try:
-            row = self.table.currentRow()
-        except AttributeError:
-            self.error_('Выберите участника!')
-            return
+        row = self.table.currentIndex().row()
         if row == -1:
             self.error_('Выберите участника!')
             return
         for i in Member.items:
-            if int(i.id) == int(self.table.item(row, 11).text()):
+            if i.id == self.data[row][11]:
                 self.currentmember = i
                 for j in range(2, 10):
                     exec(f'self.flyui.comboBox_{str(j)}.setCurrentIndex(int(i.fig_{str(j)}[' \
@@ -353,16 +395,12 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.flyui.show()
 
     def get_info(self):
-        try:
-            row = self.table.currentRow()
-        except AttributeError:
-            self.error_('Выберите участника!')
-            return
+        row = self.table.currentIndex().row()
         if row == -1:
             self.error_('Выберите участника!')
             return
         for i in Member.items:
-            if int(i.id) == int(self.table.item(row, 11).text()):
+            if i.id == self.data[row][11]:
                 self.infoui.label_number.setText(str(i.number))
                 self.infoui.lineEdit_surname.setText(str(i.surname))
                 self.infoui.lineEdit_name.setText(str(i.name))
@@ -374,6 +412,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.infoui.show()
 
     def get_static(self):
+        row = self.table.currentIndex().row()
         if self.memberclass == 'F-4H':
             stat_k = self.kh_tup
             stat_lenth = 10
@@ -382,16 +421,11 @@ class F4C(QMainWindow, Ui_MainWindow):
             stat_k = self.k_tup
             stat_lenth = 13
             dict = self.f4c_dict
-        try:
-            row = self.table.currentRow()
-        except AttributeError:
-            self.error_('Выберите участника!')
-            return
         if row == -1:
             self.error_('Выберите участника!')
             return
         for i in Member.items:
-            if int(i.id) == int(self.table.item(row, 11).text()):
+            if i.id == self.data[row][11]:
                 self.currentmember = i
                 correct_k = i.static_k if self.memberclass == 'F-4G' else 1
                 self.statui.surname_lbl.setText(str(self.currentmember.surname))
@@ -448,151 +482,66 @@ class F4C(QMainWindow, Ui_MainWindow):
                     exec('self.statui.score_3_' + str(j) + '.setText(''score_3'')')
 
                 total = (sum_1 + sum_2 + sum_3) * correct_k + self.currentmember.bonus
-                self.statui.sum_1.setText(str(sum_1))
-                self.statui.sum_2.setText(str(sum_2))
-                self.statui.sum_3.setText(str(sum_3))
-                self.statui.total_score.setText(str(total))
+                self.statui.sum_1.setText(str(round(sum_1, 2)))
+                self.statui.sum_2.setText(str(round(sum_2, 2)))
+                self.statui.sum_3.setText(str(round(sum_3, 2)))
+                self.statui.total_score.setText(str(round(total, 2)))
 
         self.statui.show()
 
     def tour_1_out(self):
-        if self.memberclass == 'F-4H':
-            stat_k = self.kh_tup
-        else:
-            stat_k = self.k_tup
+        source_data = self.dataclasses[self.memberclass]
         self.tournumber = 'I'
         self.tour.setWindowTitle(f'{self.memberclass} ФАС России {self.tournumber} тур')
-        table_1 = self.tour.tableWidget
-        row = table_1.rowCount()
-        if row > -1:
-            for i in reversed(range(row)):
-                table_1.removeRow(i)
-
+        data = []
         res_list = []
-        place_list = []
-        for y in Member.items:
-            if y.cls == self.memberclass:
-                fly_grades = [y.fly_grade_1, y.fly_grade_2, y.fly_grade_3, y.fly_grade_4, y.fly_grade_5, y.fly_grade_6,
-                              y.fly_grade_7, y.fly_grade_8, y.fly_grade_9, y.fly_grade_10, y.fly_grade_11,
-                              y.fly_grade_12, y.fly_grade_13]
-                tour_1 = []
-                stat_sum_1 = 0
-                stat_sum_2 = 0
-                stat_sum_3 = 0
-                for m, grade in enumerate(fly_grades):
-                    tour_1.append(sum(grade[0] * self.fly_k[m]))
-                for k in range(13):
-                    stat_grade_1 = float(y.stat_grade_1[k])
-                    stat_grade_2 = float(y.stat_grade_2[k])
-                    stat_grade_3 = float(y.stat_grade_3[k])
-                    stat_score_1 = str(stat_k[k] * stat_grade_1)
-                    stat_score_2 = str(stat_k[k] * stat_grade_2)
-                    stat_score_3 = str(stat_k[k] * stat_grade_3)
-                    stat_sum_1 = stat_sum_1 + float(stat_score_1)
-                    stat_sum_2 = stat_sum_2 + float(stat_score_2)
-                    stat_sum_3 = stat_sum_3 + float(stat_score_3)
-                stat_total = round((stat_sum_1 + stat_sum_2 + stat_sum_3) * y.static_k + y.bonus, 2)
-                result = stat_total + sum(tour_1)
-                table_1.insertRow(row)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, y.number)
-                table_1.setItem(row, 0, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, y.surname)
-                table_1.setItem(row, 1, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, y.name)
-                table_1.setItem(row, 2, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, y.region)
-                table_1.setItem(row, 3, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, y.prototype)
-                table_1.setItem(row, 4, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, stat_total)
-                table_1.setItem(row, 5, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, sum(tour_1))
-                table_1.setItem(row, 6, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, result)
-                table_1.setItem(row, 7, item)
-                res_list.append(result)
-                place_list.append(result)
-        place_list.sort(reverse=True)
-        rowcount = table_1.rowCount()
-
-        for l in range(rowcount):
-            place = place_list.index(float(table_1.item(l, 7).text())) + 1
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, (place))
-            table_1.setItem(l, 8, item)
+        for row in source_data:
+            new_row = []
+            for col in range(7):
+                new_row.append(row[col])
+            result = row[5] + row[6]
+            new_row.append(result)
+            res_list.append(result)
+            data.append(new_row)
+        table = self.tour.tableView
+        place_list = sorted(res_list, reverse=True)
+        for l in data:
+            place = place_list.index(l[7]) + 1
+            l.append(place)
+        tourI_in_model = TableModel(tourI_headers, data)
+        tourI_model = QSortFilterProxyModel()
+        tourI_model.setSourceModel(tourI_in_model)
+        table.setModel(tourI_model)
+        table.setSortingEnabled(True)
+        table.sortByColumn(8, Qt.AscendingOrder)
 
         self.tour.show()
 
     def tour_2_out(self):
-        if self.memberclass == 'F-4H':
-            stat_k = self.kh_tup
-            stat_lenth = 10
-        else:
-            stat_k = self.k_tup
-            stat_lenth = 13
-
-        global tournumber
-        tournumber = 'II'
-        self.tourII.setWindowTitle(self.memberclass + ' ФАС России ' + tournumber + ' тур')
-        table_2 = self.tourII.tableWidget
-        row = table_2.rowCount()
-        if row > -1:
-            for i in reversed(range(row)):
-                table_2.removeRow(i)
-
+        source_data = self.dataclasses[self.memberclass]
+        self.tournumber = 'II'
+        self.tour.setWindowTitle(f'{self.memberclass} ФАС России {self.tournumber} тур')
+        data = []
         res_list = []
-        place_list = []
-        for y in Member.items:
-            if y.cls == self.memberclass:
-                tour_1 = []
-                tour_2 = []
-                tourlist = []
-                stat_sum_1 = 0
-                stat_sum_2 = 0
-                stat_sum_3 = 0
-                for m in range(13):
-                    exec(f'tour_1.append(sum(y.fly_grade_{str(m + 1)}[0]) * self.fly_k[{str(m)}])')
-                    exec(f'tour_2.append(sum(y.fly_grade_{str(m + 1)}[1]) * self.fly_k[{str(m)}])')
-                for k in range(13):
-                    stat_grade_1 = float(y.stat_grade_1[k])
-                    stat_grade_2 = float(y.stat_grade_2[k])
-                    stat_grade_3 = float(y.stat_grade_3[k])
-                    stat_score_1 = str(stat_k[k] * stat_grade_1)
-                    stat_score_2 = str(stat_k[k] * stat_grade_2)
-                    stat_score_3 = str(stat_k[k] * stat_grade_3)
-                    stat_sum_1 = stat_sum_1 + float(stat_score_1)
-                    stat_sum_2 = stat_sum_2 + float(stat_score_2)
-                    stat_sum_3 = stat_sum_3 + float(stat_score_3)
-                stat_total = round((stat_sum_1 + stat_sum_2 + stat_sum_3) * y.static_k + y.bonus, 2)
-                tourlist.append(round(sum(tour_1), 2))
-                tourlist.append(round(sum(tour_2), 2))
-                tourlist.sort(reverse=True)
-                result = stat_total + (tourlist[0] + tourlist[1]) / 2
-                table_fields = [y.number, y.surname, y.name, y.region, y.prototype, stat_total, round(sum(tour_1), 2),
-                                round(sum(tour_2), 2), result]
-                table_2.insertRow(row)
-                for column, field in enumerate(table_fields):
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setData(QtCore.Qt.EditRole, field)
-                    table_2.setItem(row, column, item)
-                res_list.append(result)
-                place_list.append(result)
-        place_list.sort(reverse=True)
-        rowcount = table_2.rowCount()
-        for l in range(rowcount):
-            place = place_list.index(float(table_2.item(l, 8).text())) + 1
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, place)
-            table_2.setItem(l, 9, item)
-
+        for row in source_data:
+            new_row = []
+            for col in range(8):
+                new_row.append(row[col])
+            result = row[5] + (row[6] + row[7]) / 2
+            new_row.append(result)
+            res_list.append(result)
+            data.append(new_row)
+        table = self.tourII.tableView
+        place_list = sorted(res_list, reverse=True)
+        for l in data:
+            place = place_list.index(l[8]) + 1
+            l.append(place)
+        tourII_in_model = TableModel(tourII_headers, data)
+        tourII_model = QSortFilterProxyModel()
+        tourII_model.setSourceModel(tourII_in_model)
+        table.setModel(tourII_model)
+        table.setSortingEnabled(True)
+        table.sortByColumn(9, Qt.AscendingOrder)
         self.tourII.show()
 
     def set_locate(self):
@@ -700,17 +649,14 @@ class F4C(QMainWindow, Ui_MainWindow):
         Referee.items.clear()
         Member.items.clear()
         Info.items.clear()
+        for cls in self.dataclasses:
+            self.dataclasses[cls].clear()
         self.change_tab()
-
-    def clear_table(self, table):
-        row = table.rowCount()
-        if row > -1:
-            for i in reversed(range(row)):
-                table.removeRow(i)
 
     def set_open(self):
         idlist = []
         for cls in self.classes:
+            self.set_members(cls)
             self.filling(cls)
         for i in Member.items:
             idlist.append(i.id)
@@ -769,26 +715,24 @@ class F4C(QMainWindow, Ui_MainWindow):
         # self.set_referees()
 
     def filling(self, cls):
-        table = self.classes[cls]
-        self.clear_table(table)
-        row = table.rowCount()
+        # table = self.classes[cls]
+        self.data = self.dataclasses[cls]
+        self.model = self.in_models[cls]
         results_list = []
         for i in Member.items:
             if i.cls == cls:
-                table.insertRow(row)
-                data = self.calculate(i)
-                results_list.append(data[9])
-                for column, it in enumerate(data):
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setData(QtCore.Qt.EditRole, it)
-                    table.setItem(row, column, item)
-            place_list = sorted(results_list, reverse=True)
+                member_data = self.calculate(i)
+                results_list.append(member_data[4])
+                for row in self.data:
+                    if row[11] == i.id:
+                        for column, item in enumerate(member_data, 5):
+                            self.data[self.data.index(row)][column] = item
+        place_list = sorted(results_list, reverse=True)
         for l, r in enumerate(results_list):
-            result = float(table.item(l, 9).text())
+            result = results_list[l]
             place = place_list.index(result) + 1
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, place)
-            table.setItem(l, 10, item)
+            self.data[l][10] = place
+        self.model.setItems(self.data)
 
     def calculate(self, member):
         static_k = self.kh_tup if member.cls == 'F-4H' else self.k_tup
@@ -816,12 +760,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         tourlist.sort(reverse=True)
         static_total = round((sum(static) + member.bonus) * member.static_k, 2)
         result = (tourlist[0] + tourlist[1]) / 2 + static_total
-        fields = (member.number, member.surname, member.name, member.region, member.prototype, static_total,
-                  round(sum(tour_1), 2), round(sum(tour_2), 2), round(sum(tour_3), 2), result, '', member.id)
-        out_data = []
-        for item in fields:
-            out_data.append(item)
-        return out_data
+        return static_total, round(sum(tour_1), 2), round(sum(tour_2), 2), round(sum(tour_3), 2), result
 
     def handlePreview(self, target):
         dialog = QtPrintSupport.QPrintPreviewDialog()
@@ -832,10 +771,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
         begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
         end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
-        table_1 = self.tour.tableWidget
-        row = table_1.rowCount()
-        column = table_1.columnCount()
-
+        table = self.tour.tableView
+        model = table.model()
         first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
         ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
         content = ''
@@ -856,7 +793,7 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="3%">№</td>' \
+              f'<td align="center" width="2%">№</td>' \
               f'<td align="center" width="19%">Фамилия</td>' \
               f'<td align="center" width="18%">Имя</td>' \
               f'<td align="center" width="19%">Регион</td>' \
@@ -864,12 +801,13 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'<td align="center" width="6%">Стенд</td>' \
               f'<td align="center" width="6%">I тур</td>' \
               f'<td align="center" width="6%">Рез.</td>' \
-              f'<td align="center" width="4%">Место</td>' \
+              f'<td align="center" width="5%">Место</td>' \
               f'</tr>'
-        for i in range(row):
+        for k in range(model.rowCount()):
             content = content + '<tr>'
-            for k in range(column):
-                item = table_1.item(i, k).text()
+            for i in range(model.columnCount()):
+                index = model.index(k, i)
+                item = model.data(index)
                 content = content + f'<td align="center">{item}</td>'
             content = content + '</tr>'
         content = content + '</table>'
@@ -897,10 +835,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
         begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
         end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
-        table_2 = self.tourII.tableWidget
-        row = table_2.rowCount()
-        column = table_2.columnCount()
-
+        table = self.tourII.tableView
+        model = table.model()
         first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
         ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
         content = ''
@@ -921,21 +857,22 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="3%">№</td>' \
-              f'<td align="center" width="18.5%">Фамилия</td>' \
+              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="17%">Фамилия</td>' \
               f'<td align="center" width="17.5%">Имя</td>' \
-              f'<td align="center" width="18.5%">Регион</td>' \
-              f'<td align="center" width="18.5%">Прототип</td>' \
-              f'<td align="center" width="5%">Стенд</td>' \
-              f'<td align="center" width="5%">I тур</td>' \
-              f'<td align="center" width="5%">II тур</td>' \
-              f'<td align="center" width="5%">Рез.</td>' \
-              f'<td align="center" width="4%">Место</td>' \
+              f'<td align="center" width="18%">Регион</td>' \
+              f'<td align="center" width="18%">Прототип</td>' \
+              f'<td align="center" width="5.5%">Стенд</td>' \
+              f'<td align="center" width="5.5%">I тур</td>' \
+              f'<td align="center" width="5.5%">II тур</td>' \
+              f'<td align="center" width="6%">Рез.</td>' \
+              f'<td align="center" width="5%">Место</td>' \
               f'</tr>'
-        for i in range(row):
+        for i in range(model.rowCount()):
             content = content + '<tr>'
-            for k in range(column):
-                item = table_2.item(i, k).text()
+            for k in range(model.columnCount()):
+                index = model.index(i, k)
+                item = model.data(index)
                 content = content + f'<td align="center">{item}</td>'
             content = content + '</tr>'
         content = content + '</table>'
@@ -963,9 +900,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
         begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
         end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
-        row = self.table.rowCount()
-        column = self.table.columnCount() - 1
-
+        table = self.table
+        model = table.model()
         first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
         ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
         content = ''
@@ -988,26 +924,23 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="3%">№</td>' \
-              f'<td align="center" width="16%">Фамилия</td>' \
-              f'<td align="center" width="15%">Имя</td>' \
-              f'<td align="center" width="16%">Регион</td>' \
-              f'<td align="center" width="16%">Прототип</td>' \
-              f'<td align="center" width="6%">Стенд</td>' \
-              f'<td align="center" width="6%">I тур</td>' \
-              f'<td align="center" width="6%">II тур</td>' \
-              f'<td align="center" width="6%">III тур</td>' \
-              f'<td align="center" width="6%">Рез.</td>' \
-              f'<td align="center" width="4%">Место</td>' \
+              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="15%">Фамилия</td>' \
+              f'<td align="center" width="14%">Имя</td>' \
+              f'<td align="center" width="14%">Регион</td>' \
+              f'<td align="center" width="15%">Прототип</td>' \
+              f'<td align="center" width="7%">Стенд</td>' \
+              f'<td align="center" width="7%">I тур</td>' \
+              f'<td align="center" width="7%">II тур</td>' \
+              f'<td align="center" width="7%">III тур</td>' \
+              f'<td align="center" width="7%">Рез.</td>' \
+              f'<td align="center" width="5%">Место</td>' \
               f'</tr>'
-        for i in range(row):
+        for i in range(model.rowCount()):
             content = content + '<tr>'
-            for k in range(column):
-                try:
-                    item = self.table.item(i, k).text()
-                except AttributeError:
-                    self.error_('Недостаточно данных для вывода результатов')
-                    return
+            for k in range(model.columnCount()):
+                index = model.index(i, k)
+                item = model.data(index)
                 content = content + f'<td align="center">{item}</td>'
             content = content + '</tr>'
         content = content + '</table>'
@@ -1100,15 +1033,15 @@ class F4C(QMainWindow, Ui_MainWindow):
                 exec(f'self.currentmember.fig_{str(j)}[2] = self.currentmember.fig_{str(j)}[0]')
 
     def set_info(self):
-        row = self.table.currentRow()
-        self.table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(self.infoui.label_number.text())))
-        self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(self.infoui.lineEdit_surname.text())))
-        self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(self.infoui.lineEdit_name.text())))
-        self.table.setItem(row, 3, QtWidgets.QTableWidgetItem(str(self.infoui.lineEdit_region.text())))
-        self.table.setItem(row, 4, QtWidgets.QTableWidgetItem(str(self.infoui.lineEdit_prototype.text())))
+        row = self.table.currentIndex().row()
+        # self.data[row][0] = int(self.infoui.label_number.text())
+        self.data[row][1] = self.infoui.lineEdit_surname.text()
+        self.data[row][2] = self.infoui.lineEdit_name.text()
+        self.data[row][3] = self.infoui.lineEdit_region.text()
+        self.data[row][4] = self.infoui.lineEdit_prototype.text()
         for i in Member.items:
-            if i.id == int(self.table.item(row, 11).text()):
-                i.number = int(self.infoui.label_number.text())
+            if i.id == self.data[row][11]:
+                # i.number = int(self.infoui.label_number.text())
                 i.surname = self.infoui.lineEdit_surname.text()
                 i.name = self.infoui.lineEdit_name.text()
                 i.region = self.infoui.lineEdit_region.text()
@@ -1122,9 +1055,9 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.set_grades()
 
     def set_grades(self):
-        row = self.table.currentRow()
+        row = self.table.currentIndex().row()
         for i in Member.items:
-            if int(i.id) == int(self.table.item(row, 11).text()):
+            if i.id == self.data[row][11]:
                 self.currentmember = i
 
         for j in range(1, 14):
@@ -1887,6 +1820,7 @@ class F4C(QMainWindow, Ui_MainWindow):
     def static_action(self, btn):
         if btn.text() in ['OK', 'Apply', '&OK', '&Apply']:
             self.set_static()
+            self.calculate_static()
 
     def set_static(self):
         data_1 = []
@@ -1904,9 +1838,45 @@ class F4C(QMainWindow, Ui_MainWindow):
 
         self.filling(self.currentmember.cls)
 
+    def calculate_static(self):
+        if self.memberclass == 'F-4H':
+            stat_k = self.kh_tup
+            stat_lenth = 10
+        else:
+            stat_k = self.k_tup
+            stat_lenth = 13
+        correct_k = self.currentmember.static_k if self.memberclass == 'F-4G' else 1
+        for k in range(13):
+            item = '' if stat_k[k] == 0 else stat_k[k]
+            exec(f'self.statui.k_{str(k)}.setText(str({str(item)}))')
+        sum_1 = 0
+        sum_2 = 0
+        sum_3 = 0
+        for j in range(stat_lenth):
+            grade_1 = float(self.currentmember.stat_grade_1[j])
+            grade_2 = float(self.currentmember.stat_grade_2[j])
+            grade_3 = float(self.currentmember.stat_grade_3[j])
+            k = stat_k[j]
+            score_1 = str(round(k * grade_1, 1))
+            score_2 = str(round(k * grade_2, 1))
+            score_3 = str(round(k * grade_3, 1))
+            sum_1 = sum_1 + float(score_1)
+            sum_2 = sum_2 + float(score_2)
+            sum_3 = sum_3 + float(score_3)
 
-    def ok(self):
-        print('OK!')
+            exec(f'self.statui.dsb_1_{str(j)}.setValue(self.currentmember.stat_grade_1[{str(j)}])')
+            exec(f'self.statui.dsb_2_{str(j)}.setValue(self.currentmember.stat_grade_2[{str(j)}])')
+            exec(f'self.statui.dsb_3_{str(j)}.setValue(self.currentmember.stat_grade_3[{str(j)}])')
+            exec(f'self.statui.score_1_{str(j)}.setText(''score_1'')')
+            exec('self.statui.score_2_' + str(j) + '.setText(''score_2'')')
+            exec('self.statui.score_3_' + str(j) + '.setText(''score_3'')')
+
+        total = (sum_1 + sum_2 + sum_3) * correct_k + self.currentmember.bonus
+        self.statui.sum_1.setText(str(sum_1))
+        self.statui.sum_2.setText(str(sum_2))
+        self.statui.sum_3.setText(str(sum_3))
+        self.statui.total_score.setText(str(total))
+
 
 class f4cWindow(QDialog, Ui_F4C_fill):
     def __init__(self):
@@ -2023,6 +1993,55 @@ class Info:
         self.ekp_f4cu = ''
         Info.items.append(self)
 
+
+class TableModel(QAbstractTableModel):
+
+    def __init__(self, headers, data_in, parent=None):
+
+        super().__init__(parent)
+        self.headers = headers
+        self.data_in = data_in
+        self.insertRows(len(self.data_in), 1)
+        self.items = []
+
+    def setItems(self, items):
+        self.beginResetModel()
+        self.items = items
+        self.endResetModel()
+
+    def headerData(self, section, orientation, role):
+
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return self.headers[section]
+
+    def data(self, index, role):
+
+        row = index.row()
+        col = index.column()
+
+        if role == Qt.DisplayRole:
+            value = self.data_in[row][col]
+            return value
+
+    def columnCount(self, parent):
+
+        return len(self.headers)
+
+    def rowCount(self, parent):
+
+        return len(self.data_in)
+
+    def insertRows(self, position, rows, parent=QModelIndex()):
+
+        self.beginInsertRows(parent, position, position + rows - 1)
+        self.endInsertRows()
+        return True
+
+    # def removeRow(self, row: int, parent=QModelIndex()):
+    #     self.beginRemoveRows(row, row)
+    #     self.endRemoveRows()
+    #     return True
 
 
 if __name__ == "__main__":
