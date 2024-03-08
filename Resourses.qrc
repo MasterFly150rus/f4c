@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>Ico/FAS-f.png</file>
+        <file>Ico/FAS-f.ico</file>
+        <file>Ico/logo_301.png</file>
+    </qresource>
+</RCC>

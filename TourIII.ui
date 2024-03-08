@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TourIII</class>
+ <widget class="QWidget" name="TourIII">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>930</width>
+    <height>449</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>F-4C ФАС России</string>
+  </property>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>891</width>
+     <height>311</height>
+    </rect>
+   </property>
+   <property name="editTriggers">
+    <set>QAbstractItemView::NoEditTriggers</set>
+   </property>
+   <property name="selectionBehavior">
+    <enum>QAbstractItemView::SelectRows</enum>
+   </property>
+   <property name="sortingEnabled">
+    <bool>true</bool>
+   </property>
+   <attribute name="horizontalHeaderVisible">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>80</number>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <column>
+    <property name="text">
+     <string>№</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Фамилия</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Имя</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Регион</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Прототип</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Стенд общ.</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>I тур</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>II тур</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>III тур</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Результат</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Место</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>400</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Печать</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
