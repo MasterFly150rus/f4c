@@ -208,7 +208,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         report_.setWindowIcon(icon)
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
-                        ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ. Версия 2.0"')
+                        ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ. Версия 2.1"')
         report_.setIcon(QMessageBox.Information)
         report_.setStandardButtons(QMessageBox.Ok)
         report_.exec_()
