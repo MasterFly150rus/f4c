@@ -262,7 +262,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberclass = 'F-4C'
         self.table = self.tableView
         self.data = self.f4c_data
-        self.model = self.f4c_in_model
+        self.model = self.f4c_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(False)
         self.statui.dsb_bonus.setEnabled(False)
@@ -271,7 +271,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberclass = 'F-4C (Ю)'
         self.table = self.tableView_2
         self.data = self.f4cu_data
-        self.model = self.f4cu_in_model
+        self.model = self.f4cu_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(False)
         self.statui.dsb_bonus.setEnabled(False)
@@ -280,7 +280,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberclass = 'F-4H'
         self.table = self.tableView_3
         self.data = self.f4h_data
-        self.model = self.f4h_in_model
+        self.model = self.f4h_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(False)
         self.statui.dsb_bonus.setEnabled(True)
@@ -289,7 +289,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberclass = 'F-4G'
         self.table = self.tableView_4
         self.data = self.f4g_data
-        self.model = self.f4g_in_model
+        self.model = self.f4g_model
         self.f4cui.cls_label.setText(self.memberclass)
         self.statui.dsb_k.setEnabled(True)
         self.statui.dsb_bonus.setEnabled(False)
@@ -394,14 +394,15 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.flyui.show()
 
     def get_info(self):
-        index = self.table.currentIndex()
         row = self.table.currentIndex().row()
-        print(self.model.index(row, 11))
+        id_index = self.model.index(row, 0)
+        member_id = self.model.data(id_index, Qt.DisplayRole)
+        print(row, member_id)
         if row == -1:
             self.error_('Выберите участника!')
             return
         for i in Member.items:
-            if i.id == self.data[row][11]:
+            if i.number == member_id and i.cls == self.memberclass:
                 self.infoui.label_number.setText(str(i.number))
                 self.infoui.lineEdit_surname.setText(str(i.surname))
                 self.infoui.lineEdit_name.setText(str(i.name))
