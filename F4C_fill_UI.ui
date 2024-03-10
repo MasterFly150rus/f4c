@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>332</width>
+    <width>345</width>
     <height>305</height>
    </rect>
   </property>
@@ -42,9 +42,9 @@
   <widget class="QWidget" name="formLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>20</x>
      <y>20</y>
-     <width>271</width>
+     <width>311</width>
      <height>242</height>
     </rect>
    </property>
@@ -61,6 +61,9 @@
     </item>
     <item row="1" column="1">
      <widget class="QSpinBox" name="spinBox">
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::UpDownArrows</enum>
+      </property>
       <property name="minimum">
        <number>0</number>
       </property>
@@ -156,13 +159,10 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="1">
-     <widget class="QLineEdit" name="lineEdit_6"/>
-    </item>
     <item row="6" column="0">
      <widget class="QLabel" name="label_6">
       <property name="text">
-       <string>Масштаб</string>
+       <string>Масштаб                  1:</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -172,15 +172,50 @@
     <item row="7" column="0">
      <widget class="QLabel" name="label_8">
       <property name="text">
-       <string>Скорость прототипа</string>
+       <string>Скорость прототипа, км/ч</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
+    <item row="6" column="1">
+     <widget class="QDoubleSpinBox" name="scale_box">
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::NoButtons</enum>
+      </property>
+      <property name="correctionMode">
+       <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+      </property>
+      <property name="decimals">
+       <number>2</number>
+      </property>
+      <property name="minimum">
+       <double>0.000000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>10000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>0.000000000000000</double>
+      </property>
+     </widget>
+    </item>
     <item row="7" column="1">
-     <widget class="QLineEdit" name="lineEdit_7"/>
+     <widget class="QSpinBox" name="speed_box">
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::NoButtons</enum>
+      </property>
+      <property name="correctionMode">
+       <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

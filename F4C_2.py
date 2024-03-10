@@ -213,7 +213,6 @@ class F4C(QMainWindow, Ui_MainWindow):
         report_.setStandardButtons(QMessageBox.Ok)
         report_.exec_()
 
-
     def set_members(self, cls):
         data = self.dataclasses[cls]
         for i in Member.items:
@@ -302,15 +301,15 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.f4cui.lineEdit_3.setEnabled(False)
             self.f4cui.lineEdit_4.setEnabled(False)
             self.f4cui.lineEdit_5.setEnabled(False)
-            self.f4cui.lineEdit_6.setEnabled(False)
-            self.f4cui.lineEdit_7.setEnabled(False)
+            self.f4cui.scale_box.setEnabled(False)
+            self.f4cui.speed_box.setEnabled(False)
         else:
             self.f4cui.lineEdit_2.setEnabled(True)
             self.f4cui.lineEdit_3.setEnabled(True)
             self.f4cui.lineEdit_4.setEnabled(True)
             self.f4cui.lineEdit_5.setEnabled(True)
-            self.f4cui.lineEdit_6.setEnabled(True)
-            self.f4cui.lineEdit_7.setEnabled(True)
+            self.f4cui.scale_box.setEnabled(True)
+            self.f4cui.speed_box.setEnabled(True)
         self.f4cui.spinBox.valueChanged.connect(self.f4c_filling)
         self.f4cui.show()
 
@@ -320,30 +319,30 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.f4cui.lineEdit_3.clear()
         self.f4cui.lineEdit_4.clear()
         self.f4cui.lineEdit_5.clear()
-        self.f4cui.lineEdit_6.clear()
-        self.f4cui.lineEdit_7.clear()
+        self.f4cui.scale_box.clear()
+        self.f4cui.speed_box.clear()
         if self.f4cui.spinBox.value() == 0:
             self.f4cui.lineEdit_2.setEnabled(False)
             self.f4cui.lineEdit_3.setEnabled(False)
             self.f4cui.lineEdit_4.setEnabled(False)
             self.f4cui.lineEdit_5.setEnabled(False)
-            self.f4cui.lineEdit_6.setEnabled(False)
-            self.f4cui.lineEdit_7.setEnabled(False)
+            self.f4cui.scale_box.setEnabled(False)
+            self.f4cui.speed_box.setEnabled(False)
         else:
             self.f4cui.lineEdit_2.setEnabled(True)
             self.f4cui.lineEdit_3.setEnabled(True)
             self.f4cui.lineEdit_4.setEnabled(True)
             self.f4cui.lineEdit_5.setEnabled(True)
-            self.f4cui.lineEdit_6.setEnabled(True)
-            self.f4cui.lineEdit_7.setEnabled(True)
+            self.f4cui.scale_box.setEnabled(True)
+            self.f4cui.speed_box.setEnabled(True)
         for i in Member.items:
             if i.number == self.f4cui.spinBox.value():
                 self.f4cui.lineEdit_2.setText(str(i.surname))
                 self.f4cui.lineEdit_3.setText(str(i.name))
                 self.f4cui.lineEdit_4.setText(str(i.region))
                 self.f4cui.lineEdit_5.setText(str(i.prototype))
-                self.f4cui.lineEdit_6.setText(str(i.scale))
-                self.f4cui.lineEdit_7.setText(str(i.speed))
+                self.f4cui.scale_box.setValue(float(i.scale))
+                self.f4cui.speed_box.setValue(float(i.speed))
 
     def new_member(self):
         if self.f4cui.spinBox.value() == 0:
@@ -366,8 +365,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         globals()[a].name = self.f4cui.lineEdit_3.text()
         globals()[a].region = self.f4cui.lineEdit_4.text()
         globals()[a].prototype = self.f4cui.lineEdit_5.text()
-        globals()[a].scale = self.f4cui.lineEdit_6.text()
-        globals()[a].speed = self.f4cui.lineEdit_7.text()
+        globals()[a].scale = self.f4cui.scale_box.value()
+        globals()[a].speed = self.f4cui.speed_box.value()
         globals()[a].id = self.count_id
 
         data.append([globals()[a].number, globals()[a].surname, globals()[a].name, globals()[a].region,
@@ -395,7 +394,9 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.flyui.show()
 
     def get_info(self):
+        index = self.table.currentIndex()
         row = self.table.currentIndex().row()
+        print(self.model.index(row, 11))
         if row == -1:
             self.error_('Выберите участника!')
             return
@@ -405,8 +406,8 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.infoui.lineEdit_surname.setText(str(i.surname))
                 self.infoui.lineEdit_name.setText(str(i.name))
                 self.infoui.lineEdit_prototype.setText(str(i.prototype))
-                self.infoui.lineEdit_scale.setText(str(i.scale))
-                self.infoui.lineEdit_speed.setText(str(i.speed))
+                self.infoui.scale_box.setValue(float(i.scale))
+                self.infoui.speed_box.setValue(int(i.speed))
                 self.infoui.lineEdit_region.setText(str(i.region))
                 self.infoui.label_cls.setText(str(i.cls))
                 self.infoui.show()
@@ -970,7 +971,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.flylistui.number_lbl.setText(str(self.currentmember.number))
         self.flylistui.region_lbl.setText(str(self.currentmember.region))
         self.flylistui.prototype_lbl.setText(str(self.currentmember.prototype))
-        self.flylistui.scale_lbl.setText(str(self.currentmember.scale))
+        self.flylistui.scale_lbl.setText(f'1:{str(self.currentmember.scale)}')
         self.flylistui.speed_lbl.setText(str(self.currentmember.speed))
         self.flylistui.cls_label.setText(str(self.currentmember.cls))
         for j in range(1, 9):
@@ -1047,8 +1048,8 @@ class F4C(QMainWindow, Ui_MainWindow):
                 i.region = self.infoui.lineEdit_region.text()
                 i.cls = self.infoui.label_cls.text()
                 i.prototype = self.infoui.lineEdit_prototype.text()
-                i.scale = self.infoui.lineEdit_scale.text()
-                i.speed = self.infoui.lineEdit_speed.text()
+                i.scale = self.infoui.scale_box.value()
+                i.speed = self.infoui.speed_box.value()
 
     def gradelist_action(self, btn):
         if btn.text() in ['OK', 'Apply', '&OK', '&Apply']:
@@ -1241,6 +1242,9 @@ class F4C(QMainWindow, Ui_MainWindow):
                         'label_12_4': self.flylistui.label_12_4.text(), 'label_12_5': self.flylistui.label_12_5.text()}
         current_year = "{}".format(self.dateEdit.date().toString('yyyy'))
         program = ''
+        scale_speed = round(int(self.currentmember.speed) / float(self.currentmember.scale), 2) if\
+            float(self.currentmember.scale) > 0 else '---'
+        base_time = round(360 / scale_speed, 2) if float(self.currentmember.scale) > 0 else '---'
 
         for i in range(13):
             program = program + '<tr>'
@@ -1255,11 +1259,10 @@ class F4C(QMainWindow, Ui_MainWindow):
                        f'<body>' \
                        f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
                        f'<tr>' \
-                       f'<td rowspan="5" width="52%" align="center">ФЕДЕРАЦИЯ АВИАМОДЕЛЬНОГО СПОРТА РОССИИ<br>' \
+                       f'<td rowspan="4" width="52%" align="center">ФЕДЕРАЦИЯ АВИАМОДЕЛЬНОГО СПОРТА РОССИИ<br>' \
                        f'Чемпионат России в классе радиоуправляемых<br>' \
-                       f'моделей-копий самолетов<br>' \
-                       f'{current_year} г.<br>' \
-                       f'{self.memberclass}' \
+                       f'моделей-копий самолетов {self.memberclass}<br>' \
+                       f'{current_year} г.' \
                        f'</td>' \
                        f'<td align="center">III тур</td>' \
                        f'<td align="center">II тур</td>' \
@@ -1275,7 +1278,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                        f'<td align="center">№ {self.currentmember.number}</td>' \
                        f'<td align="center">№ {self.currentmember.number}</td>' \
                        f'</tr>' \
-                       f'<tr>' \
+                       f'<tr>'\
                        f'<td align="center">{self.memberclass}</td>' \
                        f'<td align="center">{self.memberclass}</td>' \
                        f'<td align="center">{self.memberclass}</td>' \
@@ -1293,14 +1296,16 @@ class F4C(QMainWindow, Ui_MainWindow):
                        f'{program}' \
                        f'<tr>' \
                        f'<td width="2%"></td>' \
-                       f'<td colspan="2"></td>' \
+                       f'<td colspan="2">Прототип: {self.currentmember.prototype}</td>' \
                        f'<td>Судья</td>' \
                        f'<td>Судья</td>' \
                        f'<td>Судья</td>' \
                        f'</tr>' \
                        f'<tr>' \
                        f'<td></td>' \
-                       f'<td colspan="2"></td>' \
+                       f'<td colspan="2">Скорость прототипа: {self.currentmember.speed} км/ч<br>' \
+                       f'Масштабная скорость: {scale_speed} км/ч<br>' \
+                       f'Пролёт базы: {base_time} сек.</td>' \
                        f'<td>{self.flylistui.comboBox_1.currentText()}<br><br>_____________</td>' \
                        f'<td>{self.flylistui.comboBox_1.currentText()}<br><br>_____________</td>' \
                        f'<td>{self.flylistui.comboBox_1.currentText()}<br><br>_____________</td>' \
