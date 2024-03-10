@@ -15,7 +15,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.WindowModal)
-        MainWindow.resize(900, 733)
+        MainWindow.resize(900, 738)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -561,10 +561,6 @@ class Ui_MainWindow(object):
         self.action_3.setObjectName("action_3")
         self.about_action = QtWidgets.QAction(MainWindow)
         self.about_action.setObjectName("about_action")
-        self.actionldf = QtWidgets.QAction(MainWindow)
-        self.actionldf.setObjectName("actionldf")
-        self.action_4 = QtWidgets.QAction(MainWindow)
-        self.action_4.setObjectName("action_4")
         self.menu.addAction(self.action_2)
         self.menu.addAction(self.action)
         self.menu.addAction(self.action_3)
@@ -623,6 +619,4 @@ class Ui_MainWindow(object):
         self.action_3.setShortcut(_translate("MainWindow", "Ctrl+Shift+S"))
         self.about_action.setText(_translate("MainWindow", "О программе"))
         self.about_action.setShortcut(_translate("MainWindow", "Ctrl+B"))
-        self.actionldf.setText(_translate("MainWindow", "ldf"))
-        self.action_4.setText(_translate("MainWindow", "Три"))
 import Resourses_rc

@@ -208,7 +208,9 @@ class F4C(QMainWindow, Ui_MainWindow):
         icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         report_.setWindowIcon(icon)
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
-                        ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ. Версия 2.1"')
+                        ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ.\n'
+                        'Версия 2.1\n'
+                        'Автор: Кирсанов Сергей')
         report_.setIcon(QMessageBox.Information)
         report_.setStandardButtons(QMessageBox.Ok)
         report_.exec_()
@@ -336,13 +338,13 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.f4cui.scale_box.setEnabled(True)
             self.f4cui.speed_box.setEnabled(True)
         for i in Member.items:
-            if i.number == self.f4cui.spinBox.value():
+            if i.number == self.f4cui.spinBox.value() and i.cls == self.memberclass:
                 self.f4cui.lineEdit_2.setText(str(i.surname))
                 self.f4cui.lineEdit_3.setText(str(i.name))
                 self.f4cui.lineEdit_4.setText(str(i.region))
                 self.f4cui.lineEdit_5.setText(str(i.prototype))
                 self.f4cui.scale_box.setValue(float(i.scale))
-                self.f4cui.speed_box.setValue(float(i.speed))
+                self.f4cui.speed_box.setValue(int(i.speed))
 
     def new_member(self):
         if self.f4cui.spinBox.value() == 0:
