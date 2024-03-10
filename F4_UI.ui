@@ -1598,16 +1598,6 @@
     <string>Ctrl+B</string>
    </property>
   </action>
-  <action name="actionldf">
-   <property name="text">
-    <string>ldf</string>
-   </property>
-  </action>
-  <action name="action_4">
-   <property name="text">
-    <string>Три</string>
-   </property>
-  </action>
  </widget>
  <resources>
   <include location="Resourses.qrc"/>

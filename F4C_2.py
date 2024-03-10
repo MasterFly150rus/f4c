@@ -56,8 +56,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.fly_tup = (
             '---', 'Восьмёрка', 'Снижение по кругу 360 градусов', 'A. Боевой разворот', 'B. Выпуск и уборка шасси',
             'C. Выпуск и уборка закрылков', 'D. Сбрасывание бомб или топливных баков', 'E. Срывной поворот',
-            'F. Иммельман', 'G. Одна петля', 'H. Кубинская "8" прямая', 'I. Кубинская "8" обратная',
-            'J. Кубинская "8" полная', 'K. Кубинская "8" половина', 'L. Половина “S” (обратная)',
+            'F. Иммельман', 'G. Одна петля', 'HJ. Кубинская "8" прямая полная', 'HK. Кубинская "8" прямая половина',
+            'IJ. Кубинская "8" обратная полная', 'IK. Кубинская "8" обратная половина', 'L. Половина “S” (обратная)',
             'M. Нормальный штопор (три витка)', 'N. Бочка', 'O. Парашют', 'P. Касание земли и взлёт (конвейер)',
             'Q. Перелёт при посадке', 'R. Скольжение влево или вправо', 'S. 1-ый полётный маневр прототипа',
             'T. 2-ой полётный маневр прототипа', 'U. Полёт по треугольному маршруту',
@@ -381,12 +381,15 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def get_prog(self):
         row = self.table.currentIndex().row()
+        id_index = self.model.index(row, 0)
+        member_id = self.model.data(id_index, Qt.DisplayRole)
         if row == -1:
             self.error_('Выберите участника!')
             return
         for i in Member.items:
-            if i.id == self.data[row][11]:
+            if i.number == member_id and i.cls == self.memberclass:
                 self.currentmember = i
+                self.flyui.member_label.setText(f'{i.cls} {i.surname} {i.name}')
                 for j in range(2, 10):
                     exec(f'self.flyui.comboBox_{str(j)}.setCurrentIndex(int(i.fig_{str(j)}[' \
                          f'{"1" if self.flyui.radioButton_2.isChecked() else "2" if self.flyui.radioButton_3.isChecked() else "0"}]))')
@@ -397,7 +400,6 @@ class F4C(QMainWindow, Ui_MainWindow):
         row = self.table.currentIndex().row()
         id_index = self.model.index(row, 0)
         member_id = self.model.data(id_index, Qt.DisplayRole)
-        print(row, member_id)
         if row == -1:
             self.error_('Выберите участника!')
             return

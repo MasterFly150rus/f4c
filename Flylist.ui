@@ -29,8 +29,8 @@
    <string>F-4C ФАС России</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>Ico/FAS-f.ico</normaloff>Ico/FAS-f.ico</iconset>
+   <iconset resource="Resourses.qrc">
+    <normaloff>:/images/Ico/logo_301.png</normaloff>:/images/Ico/logo_301.png</iconset>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -2616,7 +2616,9 @@
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="Resourses.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>pushButton_2</sender>

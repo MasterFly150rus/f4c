@@ -14,12 +14,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Flylist(object):
     def setupUi(self, Flylist):
         Flylist.setObjectName("Flylist")
-        Flylist.setWindowModality(QtCore.Qt.WindowModal)
+        Flylist.setWindowModality(QtCore.Qt.ApplicationModal)
         Flylist.resize(705, 700)
         Flylist.setMinimumSize(QtCore.QSize(705, 700))
         Flylist.setMaximumSize(QtCore.QSize(705, 700))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("Ico/FAS-f.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         Flylist.setWindowIcon(icon)
         Flylist.setModal(True)
         self.frame = QtWidgets.QFrame(Flylist)
@@ -944,3 +944,4 @@ class Ui_Flylist(object):
         self.label_12_2.setText(_translate("Flylist", "9"))
         self.pushButton.setText(_translate("Flylist", "Печать"))
         self.pushButton_2.setText(_translate("Flylist", "Закрыть"))
+import Resourses_rc
