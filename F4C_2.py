@@ -209,7 +209,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         report_.setWindowIcon(icon)
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
                         ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ.\n'
-                        'Версия 2.1\n'
+                        'Версия 2.2\n'
                         'Автор: Кирсанов Сергей')
         report_.setIcon(QMessageBox.Information)
         report_.setStandardButtons(QMessageBox.Ok)
@@ -252,13 +252,15 @@ class F4C(QMainWindow, Ui_MainWindow):
         row = self.table.currentIndex().row()
         data = self.dataclasses[self.memberclass]
         model = self.in_models[self.memberclass]
-        member_id = data[row][11]
-
+        number_index = self.model.index(row, 0)
+        member_number = self.model.data(number_index, Qt.DisplayRole)
         for i in Member.items:
-            if i.id == member_id:
+            if i.number == member_number:
                 Member.items.remove(i)
-                del data[row]
-                model.setItems(data)
+                for j, k in enumerate(data):
+                    if k[0] == member_number:
+                        del data[j]
+                        model.setItems(data)
 
     def set_f4c(self):
         self.memberclass = 'F-4C'
@@ -305,6 +307,7 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.f4cui.lineEdit_5.setEnabled(False)
             self.f4cui.scale_box.setEnabled(False)
             self.f4cui.speed_box.setEnabled(False)
+            self.f4cui.toss_box.setEnabled(False)
         else:
             self.f4cui.lineEdit_2.setEnabled(True)
             self.f4cui.lineEdit_3.setEnabled(True)
@@ -312,6 +315,7 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.f4cui.lineEdit_5.setEnabled(True)
             self.f4cui.scale_box.setEnabled(True)
             self.f4cui.speed_box.setEnabled(True)
+            self.f4cui.toss_box.setEnabled(True)
         self.f4cui.spinBox.valueChanged.connect(self.f4c_filling)
         self.f4cui.show()
 
@@ -323,6 +327,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.f4cui.lineEdit_5.clear()
         self.f4cui.scale_box.clear()
         self.f4cui.speed_box.clear()
+        self.f4cui.toss_box.clear()
         if self.f4cui.spinBox.value() == 0:
             self.f4cui.lineEdit_2.setEnabled(False)
             self.f4cui.lineEdit_3.setEnabled(False)
@@ -330,6 +335,7 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.f4cui.lineEdit_5.setEnabled(False)
             self.f4cui.scale_box.setEnabled(False)
             self.f4cui.speed_box.setEnabled(False)
+            self.f4cui.toss_box.setEnabled(False)
         else:
             self.f4cui.lineEdit_2.setEnabled(True)
             self.f4cui.lineEdit_3.setEnabled(True)
@@ -337,14 +343,16 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.f4cui.lineEdit_5.setEnabled(True)
             self.f4cui.scale_box.setEnabled(True)
             self.f4cui.speed_box.setEnabled(True)
+            self.f4cui.toss_box.setEnabled(True)
         for i in Member.items:
-            if i.number == self.f4cui.spinBox.value() and i.cls == self.memberclass:
+            if i.number == self.f4cui.spinBox.value():
                 self.f4cui.lineEdit_2.setText(str(i.surname))
                 self.f4cui.lineEdit_3.setText(str(i.name))
                 self.f4cui.lineEdit_4.setText(str(i.region))
                 self.f4cui.lineEdit_5.setText(str(i.prototype))
                 self.f4cui.scale_box.setValue(float(i.scale))
                 self.f4cui.speed_box.setValue(int(i.speed))
+                self.f4cui.toss_box.setValue(int(i.id))
 
     def new_member(self):
         if self.f4cui.spinBox.value() == 0:
@@ -353,13 +361,17 @@ class F4C(QMainWindow, Ui_MainWindow):
             return
         data = self.dataclasses[self.memberclass]
         model = self.in_models[self.memberclass]
-        for rows in data:
-            if rows[0] == self.f4cui.spinBox.value():
-                self.error_('Участник с таким номером уже зарегистрирован в этом классе')
+        for i in Member.items:
+            if i.number == self.f4cui.spinBox.value():
+                self.error_('Участник с таким номером уже зарегистрирован!')
                 self.get_data()
                 return
-        self.count_id += 1
-        a = f'member_{str(self.count_id)}'
+        for rows in data:
+            if rows[11] == self.f4cui.toss_box.value() and rows[11] > 0:
+                self.error_('Участник с таким жребием уже зарегистрирован в этом классе')
+                self.get_data()
+                return
+        a = f'member_{str(self.f4cui.spinBox.value())}'
         globals()[a] = Member(self.memberclass)
         globals()[a].cls = self.memberclass
         globals()[a].number = self.f4cui.spinBox.value()
@@ -369,7 +381,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         globals()[a].prototype = self.f4cui.lineEdit_5.text()
         globals()[a].scale = self.f4cui.scale_box.value()
         globals()[a].speed = self.f4cui.speed_box.value()
-        globals()[a].id = self.count_id
+        globals()[a].id = self.f4cui.toss_box.value()
 
         data.append([globals()[a].number, globals()[a].surname, globals()[a].name, globals()[a].region,
                     globals()[a].prototype, None, None, None, None, None, None, globals()[a].id])
@@ -400,13 +412,13 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def get_info(self):
         row = self.table.currentIndex().row()
-        id_index = self.model.index(row, 0)
-        member_id = self.model.data(id_index, Qt.DisplayRole)
+        number_index = self.model.index(row, 0)
+        member_number = self.model.data(number_index, Qt.DisplayRole)
         if row == -1:
             self.error_('Выберите участника!')
             return
         for i in Member.items:
-            if i.number == member_id and i.cls == self.memberclass:
+            if i.number == member_number and i.cls == self.memberclass:
                 self.infoui.label_number.setText(str(i.number))
                 self.infoui.lineEdit_surname.setText(str(i.surname))
                 self.infoui.lineEdit_name.setText(str(i.name))
@@ -415,6 +427,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.infoui.speed_box.setValue(int(i.speed))
                 self.infoui.lineEdit_region.setText(str(i.region))
                 self.infoui.label_cls.setText(str(i.cls))
+                self.infoui.toss_box.setValue(int(i.id))
                 self.infoui.show()
 
     def get_static(self):
@@ -1040,14 +1053,15 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def set_info(self):
         row = self.table.currentIndex().row()
-        # self.data[row][0] = int(self.infoui.label_number.text())
-        self.data[row][1] = self.infoui.lineEdit_surname.text()
-        self.data[row][2] = self.infoui.lineEdit_name.text()
-        self.data[row][3] = self.infoui.lineEdit_region.text()
-        self.data[row][4] = self.infoui.lineEdit_prototype.text()
+        number_index = self.model.index(row, 0)
+        member_number = self.model.data(number_index, Qt.DisplayRole)
         for i in Member.items:
-            if i.id == self.data[row][11]:
-                # i.number = int(self.infoui.label_number.text())
+            if i.number == member_number and i.cls == self.memberclass:
+                for rows, j in enumerate(Member.items):
+                    if j.number != i.number and j.cls == i.cls and j.id == self.infoui.toss_box.value() and j.id > 0:
+                        self.error_('Участник с таким жребием уже зарегистрирован в этом классе!')
+                        self.get_info()
+                        return
                 i.surname = self.infoui.lineEdit_surname.text()
                 i.name = self.infoui.lineEdit_name.text()
                 i.region = self.infoui.lineEdit_region.text()
@@ -1055,6 +1069,13 @@ class F4C(QMainWindow, Ui_MainWindow):
                 i.prototype = self.infoui.lineEdit_prototype.text()
                 i.scale = self.infoui.scale_box.value()
                 i.speed = self.infoui.speed_box.value()
+                i.id = self.infoui.toss_box.value()
+                self.data[row][1] = self.infoui.lineEdit_surname.text()
+                self.data[row][2] = self.infoui.lineEdit_name.text()
+                self.data[row][3] = self.infoui.lineEdit_region.text()
+                self.data[row][4] = self.infoui.lineEdit_prototype.text()
+                self.data[row][11] = self.infoui.toss_box.value()
+
 
     def gradelist_action(self, btn):
         if btn.text() in ['OK', 'Apply', '&OK', '&Apply']:
