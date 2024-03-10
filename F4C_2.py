@@ -210,7 +210,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
                         ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ.\n'
                         'Версия 2.2\n'
-                        'Автор: Кирсанов Сергей')
+                        'Автор: Кирсанов Сергей'
+                        'mailto: masterfly@mail.ru')
         report_.setIcon(QMessageBox.Information)
         report_.setStandardButtons(QMessageBox.Ok)
         report_.exec_()
