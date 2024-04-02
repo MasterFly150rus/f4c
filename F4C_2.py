@@ -1152,7 +1152,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                          f'</tr>' \
                          f'<tr>' \
                          f'<td align="center">Масштаб</td>' \
-                         f'<td align="center">{self.currentmember.scale}</td>' \
+                         f'<td align="center">1:{self.currentmember.scale}</td>' \
                          f'<td align="center">V max (км/ч)</td>' \
                          f'<td colspan="2" align="center">{self.currentmember.speed}</td>' \
                          f'</tr>' \

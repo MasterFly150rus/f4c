@@ -876,7 +876,6 @@
          <property name="font">
           <font>
            <pointsize>10</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -951,12 +950,12 @@
             <widget class="QDateEdit" name="dateEdit">
              <property name="dateTime">
               <datetime>
-               <hour>0</hour>
+               <hour>21</hour>
                <minute>0</minute>
                <second>0</second>
                <year>2022</year>
-               <month>7</month>
-               <day>1</day>
+               <month>6</month>
+               <day>30</day>
               </datetime>
              </property>
              <property name="calendarPopup">
@@ -978,12 +977,12 @@
             <widget class="QDateEdit" name="dateEdit_2">
              <property name="dateTime">
               <datetime>
-               <hour>0</hour>
+               <hour>21</hour>
                <minute>0</minute>
                <second>0</second>
                <year>2022</year>
-               <month>7</month>
-               <day>1</day>
+               <month>6</month>
+               <day>30</day>
               </datetime>
              </property>
              <property name="calendarPopup">
@@ -1545,7 +1544,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -1593,9 +1592,6 @@
   <action name="about_action">
    <property name="text">
     <string>О программе</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+B</string>
    </property>
   </action>
  </widget>
