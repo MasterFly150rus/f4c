@@ -24,6 +24,9 @@ class F4C(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.buttons = (self.add_action, self.delete_action, self.info_action, self.fly_prog_action,
+                        self.stend_action, self.line_action, self.tour_I_action, self.tour_II_action,
+                        self.result_action)
         self.locate_data = Info()
         self.referee_1 = Referee()
         self.referee_2 = Referee()
@@ -90,20 +93,20 @@ class F4C(QMainWindow, Ui_MainWindow):
                         'F-4G': self.tableView_4}
         self.set_start_date()
         self.set_end_date()
-        self.pushButton.clicked.connect(self.get_data)
-        self.pushButton_2.clicked.connect(self.qwestion)
-        self.f4c_btn_2.clicked.connect(self.get_prog)
-        self.f4c_btn.clicked.connect(self.get_info)
+        self.add_action.triggered.connect(self.get_data)
+        self.delete_action.triggered.connect(self.qwestion)
+        self.info_action.triggered.connect(self.get_info)
+        self.fly_prog_action.triggered.connect(self.get_prog)
+        self.stend_action.triggered.connect(self.get_static)
+        self.tour_I_action.triggered.connect(self.tour_1_out)
+        self.tour_II_action.triggered.connect(self.tour_2_out)
+        self.result_action.triggered.connect(lambda: self.handlePreview(self.tour_3_request))
         self.tableView.doubleClicked.connect(self.get_info)
         self.tableView_2.doubleClicked.connect(self.get_info)
         self.tableView_3.doubleClicked.connect(self.get_info)
         self.tableView_4.doubleClicked.connect(self.get_info)
-        self.f4c_btn_4.clicked.connect(self.get_static)
-        self.f4c_btn_5.clicked.connect(self.tour_1_out)
-        self.f4c_btn_6.clicked.connect(self.tour_2_out)
         self.tour.pushButton.clicked.connect(lambda: self.handlePreview(self.tour_1_request))
         self.tourII.pushButton.clicked.connect(lambda: self.handlePreview(self.tour_2_request))
-        self.f4c_btn_7.clicked.connect(lambda: self.handlePreview(self.tour_3_request))
 
         self.lineEdit_0_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_0_0.text(), 0))
         self.lineEdit_1_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_1_0.text(), 1))
@@ -209,7 +212,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         report_.setWindowIcon(icon)
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
                         ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ.\n'
-                        'Версия 2.2\n'
+                        'Версия 2.3\n'
                         'Автор: Кирсанов Сергей\n'
                         'mailto: masterfly@mail.ru')
         report_.setIcon(QMessageBox.Information)
@@ -227,6 +230,9 @@ class F4C(QMainWindow, Ui_MainWindow):
     def error_(error_massage):
         error = QMessageBox()
         error.setWindowTitle("ФАСР")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        error.setWindowIcon(icon)
         error.setText(error_massage)
         error.setIcon(QMessageBox.Warning)
         error.setStandardButtons(QMessageBox.Ok)
@@ -239,6 +245,9 @@ class F4C(QMainWindow, Ui_MainWindow):
             return
         qwest = QMessageBox()
         qwest.setWindowTitle("ФАСР")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        qwest.setWindowIcon(icon)
         qwest.setText("Вы уверны, что хотите удалить участника?")
         qwest.setIcon(QMessageBox.Question)
         qwest.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -396,11 +405,11 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def get_prog(self):
         row = self.table.currentIndex().row()
-        id_index = self.model.index(row, 0)
-        member_id = self.model.data(id_index, Qt.DisplayRole)
         if row == -1:
             self.error_('Выберите участника!')
             return
+        id_index = self.model.index(row, 0)
+        member_id = self.model.data(id_index, Qt.DisplayRole)
         for i in Member.items:
             if i.number == member_id and i.cls == self.memberclass:
                 self.currentmember = i
@@ -413,11 +422,11 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def get_info(self):
         row = self.table.currentIndex().row()
-        number_index = self.model.index(row, 0)
-        member_number = self.model.data(number_index, Qt.DisplayRole)
         if row == -1:
             self.error_('Выберите участника!')
             return
+        number_index = self.model.index(row, 0)
+        member_number = self.model.data(number_index, Qt.DisplayRole)
         for i in Member.items:
             if i.number == member_number and i.cls == self.memberclass:
                 self.infoui.label_number.setText(str(i.number))
@@ -595,23 +604,11 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def change_tab(self):
         if self.tabWidget.currentIndex() == 0:
-            self.pushButton.setEnabled(False)
-            self.pushButton_2.setEnabled(False)
-            self.f4c_btn.setEnabled(False)
-            self.f4c_btn_2.setEnabled(False)
-            self.f4c_btn_4.setEnabled(False)
-            self.f4c_btn_5.setEnabled(False)
-            self.f4c_btn_6.setEnabled(False)
-            self.f4c_btn_7.setEnabled(False)
+            for button in self.buttons:
+                button.setEnabled(False)
         else:
-            self.pushButton.setEnabled(True)
-            self.pushButton_2.setEnabled(True)
-            self.f4c_btn.setEnabled(True)
-            self.f4c_btn_2.setEnabled(True)
-            self.f4c_btn_4.setEnabled(True)
-            self.f4c_btn_5.setEnabled(True)
-            self.f4c_btn_6.setEnabled(True)
-            self.f4c_btn_7.setEnabled(True)
+            for button in self.buttons:
+                button.setEnabled(True)
         if self.tabWidget.currentIndex() == 1:
             self.set_f4c()
         if self.tabWidget.currentIndex() == 2:
@@ -724,15 +721,12 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def set_surname(self, surname, num):
         Referee.items[num].surname = surname
-        # self.set_referees()
 
     def set_name(self, name, num):
         Referee.items[num].name = name
-        # self.set_referees()
 
     def set_patronymic(self, patronymic, num):
         Referee.items[num].patronymic = patronymic
-        # self.set_referees()
 
     def filling(self, cls):
         # table = self.classes[cls]
@@ -1076,7 +1070,6 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.data[row][3] = self.infoui.lineEdit_region.text()
                 self.data[row][4] = self.infoui.lineEdit_prototype.text()
                 self.data[row][11] = self.infoui.toss_box.value()
-
 
     def gradelist_action(self, btn):
         if btn.text() in ['OK', 'Apply', '&OK', '&Apply']:
