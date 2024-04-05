@@ -7,6 +7,7 @@ from TourI_UI import Ui_TourI
 from TourII_UI import Ui_TourII
 from Flylist import Ui_Flylist
 from Gradelist import Ui_Gradelist
+from Timetable import Ui_Timetable
 from PyQt5 import QtWidgets, QtGui, QtPrintSupport, QtCore
 from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow, QMessageBox, QFileDialog, QHeaderView
 from PyQt5.Qt import QApplication, Qt
@@ -19,6 +20,8 @@ headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип'
            'Место')
 tourI_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат', 'Место')
 tourII_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат', 'Место')
+fly_tour1_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка')
+fly_tour2_3_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Результат')
 
 class F4C(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -46,6 +49,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.tourII = TourII()
         self.gradelistui = GradeList()
         self.flylistui = FlyList()
+        self.timetable = Timetable()
         self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.tableView_2.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.tableView_3.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -91,6 +95,10 @@ class F4C(QMainWindow, Ui_MainWindow):
                                (self.lineEdit_9_0, self.lineEdit_9_1, self.lineEdit_9_2))
         self.classes = {'F-4C': self.tableView, 'F-4C (Ю)': self.tableView_2, 'F-4H': self.tableView_3,
                         'F-4G': self.tableView_4}
+        for cls in self.classes:
+            self.f4cui.cls_box.addItem(cls)
+        self.f4cui.cls_box.currentIndexChanged.connect(lambda: self.change_tab(self.f4cui.cls_box.currentIndex() + 1))
+        self.f4cui.cls_box.currentIndexChanged.connect(lambda: self.tabWidget.setCurrentIndex(self.f4cui.cls_box.currentIndex() + 1))
         self.set_start_date()
         self.set_end_date()
         self.add_action.triggered.connect(self.get_data)
@@ -101,6 +109,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.tour_I_action.triggered.connect(self.tour_1_out)
         self.tour_II_action.triggered.connect(self.tour_2_out)
         self.result_action.triggered.connect(lambda: self.handlePreview(self.tour_3_request))
+        self.line_action.triggered.connect(self.timetable_preview)
         self.tableView.doubleClicked.connect(self.get_info)
         self.tableView_2.doubleClicked.connect(self.get_info)
         self.tableView_3.doubleClicked.connect(self.get_info)
@@ -149,7 +158,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.action_2.triggered.connect(self.filein)
         self.action_3.triggered.connect(self.save_as)
         self.about_action.triggered.connect(self.show_about)
-        self.tabWidget.currentChanged.connect(self.change_tab)
+        self.tabWidget.currentChanged.connect(lambda: self.change_tab(self.tabWidget.currentIndex()))
         self.f4cui.buttonBox.accepted.connect(self.new_member)
         self.flyui.radioButton.clicked.connect(self.get_prog)
         self.flyui.radioButton_1.clicked.connect(self.get_prog)
@@ -185,12 +194,15 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.f4g_in_model = TableModel(headers, self.f4g_data)
         self.f4g_model = QSortFilterProxyModel()
         self.f4g_model.setSourceModel(self.f4g_in_model)
+        self.classlist = {1: 'F-4C', 2: 'F-4C (Ю)', 3: 'F-4H', 4: 'F-4G'}
         self.dataclasses = {'F-4C': self.f4c_data, 'F-4C (Ю)': self.f4cu_data, 'F-4H': self.f4h_data,
                             'F-4G': self.f4g_data}
         self.models = {'F-4C': self.f4c_model, 'F-4C (Ю)': self.f4cu_model, 'F-4H': self.f4h_model,
                        'F-4G':  self.f4g_model}
         self.in_models = {'F-4C': self.f4c_in_model, 'F-4C (Ю)': self.f4cu_in_model, 'F-4H': self.f4h_in_model,
                        'F-4G':  self.f4g_in_model}
+        self.clearfields = (self.f4cui.lineEdit_2, self.f4cui.lineEdit_3, self.f4cui.lineEdit_4, self.f4cui.lineEdit_5)
+        self.zerofields = (self.f4cui.scale_box, self.f4cui.speed_box, self.f4cui.toss_box)
         for cls in self.classes:
             table = self.classes[cls]
             table.setModel(self.models[cls])
@@ -272,90 +284,16 @@ class F4C(QMainWindow, Ui_MainWindow):
                         del data[j]
                         model.setItems(data)
 
-    def set_f4c(self):
-        self.memberclass = 'F-4C'
-        self.table = self.tableView
-        self.data = self.f4c_data
-        self.model = self.f4c_model
-        self.f4cui.cls_label.setText(self.memberclass)
-        self.statui.dsb_k.setEnabled(False)
-        self.statui.dsb_bonus.setEnabled(False)
-
-    def set_f4cu(self):
-        self.memberclass = 'F-4C (Ю)'
-        self.table = self.tableView_2
-        self.data = self.f4cu_data
-        self.model = self.f4cu_model
-        self.f4cui.cls_label.setText(self.memberclass)
-        self.statui.dsb_k.setEnabled(False)
-        self.statui.dsb_bonus.setEnabled(False)
-
-    def set_f4h(self):
-        self.memberclass = 'F-4H'
-        self.table = self.tableView_3
-        self.data = self.f4h_data
-        self.model = self.f4h_model
-        self.f4cui.cls_label.setText(self.memberclass)
-        self.statui.dsb_k.setEnabled(False)
-        self.statui.dsb_bonus.setEnabled(True)
-
-    def set_f4g(self):
-        self.memberclass = 'F-4G'
-        self.table = self.tableView_4
-        self.data = self.f4g_data
-        self.model = self.f4g_model
-        self.f4cui.cls_label.setText(self.memberclass)
-        self.statui.dsb_k.setEnabled(True)
-        self.statui.dsb_bonus.setEnabled(False)
-
     def get_data(self):
-        self.f4cui.cls_label.setText(self.memberclass)
-        if self.f4cui.spinBox.value() == 0:
-            self.f4cui.lineEdit_2.setEnabled(False)
-            self.f4cui.lineEdit_3.setEnabled(False)
-            self.f4cui.lineEdit_4.setEnabled(False)
-            self.f4cui.lineEdit_5.setEnabled(False)
-            self.f4cui.scale_box.setEnabled(False)
-            self.f4cui.speed_box.setEnabled(False)
-            self.f4cui.toss_box.setEnabled(False)
-        else:
-            self.f4cui.lineEdit_2.setEnabled(True)
-            self.f4cui.lineEdit_3.setEnabled(True)
-            self.f4cui.lineEdit_4.setEnabled(True)
-            self.f4cui.lineEdit_5.setEnabled(True)
-            self.f4cui.scale_box.setEnabled(True)
-            self.f4cui.speed_box.setEnabled(True)
-            self.f4cui.toss_box.setEnabled(True)
+        self.prepare_fields()
         self.f4cui.spinBox.valueChanged.connect(self.f4c_filling)
         self.f4cui.show()
 
     def f4c_filling(self):
-        self.f4cui.cls_label.setText(self.memberclass)
-        self.f4cui.lineEdit_2.clear()
-        self.f4cui.lineEdit_3.clear()
-        self.f4cui.lineEdit_4.clear()
-        self.f4cui.lineEdit_5.clear()
-        self.f4cui.scale_box.clear()
-        self.f4cui.speed_box.clear()
-        self.f4cui.toss_box.clear()
-        if self.f4cui.spinBox.value() == 0:
-            self.f4cui.lineEdit_2.setEnabled(False)
-            self.f4cui.lineEdit_3.setEnabled(False)
-            self.f4cui.lineEdit_4.setEnabled(False)
-            self.f4cui.lineEdit_5.setEnabled(False)
-            self.f4cui.scale_box.setEnabled(False)
-            self.f4cui.speed_box.setEnabled(False)
-            self.f4cui.toss_box.setEnabled(False)
-        else:
-            self.f4cui.lineEdit_2.setEnabled(True)
-            self.f4cui.lineEdit_3.setEnabled(True)
-            self.f4cui.lineEdit_4.setEnabled(True)
-            self.f4cui.lineEdit_5.setEnabled(True)
-            self.f4cui.scale_box.setEnabled(True)
-            self.f4cui.speed_box.setEnabled(True)
-            self.f4cui.toss_box.setEnabled(True)
+        self.prepare_fields()
         for i in Member.items:
             if i.number == self.f4cui.spinBox.value():
+                self.f4cui.cls_box.setCurrentText(str(i.cls))
                 self.f4cui.lineEdit_2.setText(str(i.surname))
                 self.f4cui.lineEdit_3.setText(str(i.name))
                 self.f4cui.lineEdit_4.setText(str(i.region))
@@ -363,6 +301,14 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.f4cui.scale_box.setValue(float(i.scale))
                 self.f4cui.speed_box.setValue(int(i.speed))
                 self.f4cui.toss_box.setValue(int(i.id))
+
+    def prepare_fields(self):
+        for field in self.clearfields:
+            field.clear()
+            field.setEnabled(False) if self.f4cui.spinBox.value() == 0 else field.setEnabled(True)
+            for field in self.zerofields:
+                field.setValue(0)
+                field.setEnabled(False) if self.f4cui.spinBox.value() == 0 else field.setEnabled(True)
 
     def new_member(self):
         if self.f4cui.spinBox.value() == 0:
@@ -376,11 +322,12 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.error_('Участник с таким номером уже зарегистрирован!')
                 self.get_data()
                 return
-        for rows in data:
-            if rows[11] == self.f4cui.toss_box.value() and rows[11] > 0:
-                self.error_('Участник с таким жребием уже зарегистрирован в этом классе')
-                self.get_data()
-                return
+        if self.f4cui.toss_box.value() > 0:
+            for rows in data:
+                if rows[11] == self.f4cui.toss_box.value():
+                    self.error_('Участник с таким жребием уже зарегистрирован в этом классе')
+                    self.get_data()
+                    return
         a = f'member_{str(self.f4cui.spinBox.value())}'
         globals()[a] = Member(self.memberclass)
         globals()[a].cls = self.memberclass
@@ -602,21 +549,20 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.file_in = filename
             self.open_file()
 
-    def change_tab(self):
+    def change_tab(self, index):
         if self.tabWidget.currentIndex() == 0:
             for button in self.buttons:
                 button.setEnabled(False)
         else:
             for button in self.buttons:
                 button.setEnabled(True)
-        if self.tabWidget.currentIndex() == 1:
-            self.set_f4c()
-        if self.tabWidget.currentIndex() == 2:
-            self.set_f4cu()
-        if self.tabWidget.currentIndex() == 3:
-            self.set_f4h()
-        if self.tabWidget.currentIndex() == 4:
-            self.set_f4g()
+            self.memberclass = self.classlist[index]
+            self.table = self.classes[self.memberclass]
+            self.data = self.dataclasses[self.memberclass]
+            self.model = self.models[self.memberclass]
+            self.f4cui.cls_box.setCurrentText(self.memberclass)
+            self.statui.dsb_bonus.setEnabled(True) if index == 3 else self.statui.dsb_bonus.setEnabled(False)
+            self.statui.dsb_k.setEnabled(True) if index == 4 else self.statui.dsb_k.setEnabled(False)
 
     def save_as(self):
         dialog = QWidget()
@@ -668,7 +614,6 @@ class F4C(QMainWindow, Ui_MainWindow):
         Info.items.clear()
         for cls in self.dataclasses:
             self.dataclasses[cls].clear()
-        self.change_tab()
 
     def set_open(self):
         idlist = []
@@ -680,7 +625,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.count_id = 0 if idlist == [] else max(idlist)
         self.set_referees()
         self.set_data()
-        self.change_tab()
+        self.change_tab(self.tabWidget.currentIndex())
 
     def set_referees(self):
         grade_referee_box = (self.gradelistui.comboBox_9, self.gradelistui.comboBox_10, self.gradelistui.comboBox_11)
@@ -1088,6 +1033,9 @@ class F4C(QMainWindow, Ui_MainWindow):
 
         self.filling(i.cls)
         self.grade_list()
+
+    def timetable_preview(self):
+        self.timetable.show()
 
     def gradelist_request(self, printer):
         figure = {2: self.currentmember.fig_2, 3: self.currentmember.fig_3, 4: self.currentmember.fig_4,
@@ -1946,6 +1894,12 @@ class FlyList(QDialog, Ui_Flylist):
 
 
 class GradeList(QDialog, Ui_Gradelist):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
+
+class Timetable(QDialog, Ui_Timetable):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
