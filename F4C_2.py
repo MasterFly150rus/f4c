@@ -56,6 +56,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.tableView_4.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.tour.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.tourII.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.timetable.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table = None
         self.memberclass = ""
         self.tournumber = 'I'
@@ -1035,6 +1036,19 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.grade_list()
 
     def timetable_preview(self):
+        data = []
+        for member in Member.items:
+            if member.cls == self.memberclass:
+                row = []
+                row.append(member.number, member.surname, member.name, member.region, member.prototype, member.id)
+                data.append(row)
+        table = self.timetable.tableView
+        fly_tour1_in_model = TableModel(fly_tour1_headers, data)
+        fly_tour1_model = QSortFilterProxyModel()
+        fly_tour1_model.setSourceModel(fly_tour1_in_model)
+        table.setModel(fly_tour1_model)
+        table.setSortingEnabled(True)
+        table.sortByColumn(5, Qt.AscendingOrder)
         self.timetable.show()
 
     def gradelist_request(self, printer):
