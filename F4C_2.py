@@ -20,8 +20,9 @@ headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип'
            'Место')
 tourI_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат', 'Место')
 tourII_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат', 'Место')
-fly_tour1_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка')
-fly_tour2_3_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Результат')
+timetable_headers = {0: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка'),
+                     1: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка'),
+                     2: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Результат')}
 
 class F4C(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -204,6 +205,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                        'F-4G':  self.f4g_in_model}
         self.clearfields = (self.f4cui.lineEdit_2, self.f4cui.lineEdit_3, self.f4cui.lineEdit_4, self.f4cui.lineEdit_5)
         self.zerofields = (self.f4cui.scale_box, self.f4cui.speed_box, self.f4cui.toss_box)
+        self.r_buttons = (self.timetable.radioButton, self.timetable.radioButton_2, self.timetable.radioButton_3)
         for cls in self.classes:
             table = self.classes[cls]
             table.setModel(self.models[cls])
@@ -214,6 +216,10 @@ class F4C(QMainWindow, Ui_MainWindow):
         if len(sys.argv) == 2:
             self.file_in = sys.argv[1]
             self.open_file()
+        self.timetable.radioButton.index = 0
+        self.timetable.radioButton_2.index = 1
+        self.timetable.radioButton_3.index = 2
+        self.timetable.buttonGroup.buttonClicked.connect(self.timetable_preview)
 
     @staticmethod
     def show_about(self):
@@ -401,8 +407,10 @@ class F4C(QMainWindow, Ui_MainWindow):
         if row == -1:
             self.error_('Выберите участника!')
             return
+        number_index = self.model.index(row, 0)
+        member_number = self.model.data(number_index, Qt.DisplayRole)
         for i in Member.items:
-            if i.id == self.data[row][11]:
+            if i.number == member_number and i.cls == self.memberclass:
                 self.currentmember = i
                 correct_k = i.static_k if self.memberclass == 'F-4G' else 1
                 self.statui.surname_lbl.setText(str(self.currentmember.surname))
@@ -1037,16 +1045,18 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def timetable_preview(self):
         data = []
+        for btn in self.r_buttons:
+            if btn.isChecked():
+                index = btn.index
+        headers = timetable_headers[index]
         for member in Member.items:
             if member.cls == self.memberclass:
-                row = []
-                row.append(member.number, member.surname, member.name, member.region, member.prototype, member.id)
-                data.append(row)
+                data.append([member.number, member.surname, member.name, member.region, member.prototype, member.id])
         table = self.timetable.tableView
-        fly_tour1_in_model = TableModel(fly_tour1_headers, data)
-        fly_tour1_model = QSortFilterProxyModel()
-        fly_tour1_model.setSourceModel(fly_tour1_in_model)
-        table.setModel(fly_tour1_model)
+        timetable_in_model = TableModel(headers, data)
+        timetable_model = QSortFilterProxyModel()
+        timetable_model.setSourceModel(timetable_in_model)
+        table.setModel(timetable_model)
         table.setSortingEnabled(True)
         table.sortByColumn(5, Qt.AscendingOrder)
         self.timetable.show()
@@ -1864,6 +1874,9 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.statui.sum_3.setText(str(sum_3))
         self.statui.total_score.setText(str(total))
 
+    def set_timetable(self, btn):
+        # if btn.isChecked():
+        return True, 'OK', btn.index
 
 class f4cWindow(QDialog, Ui_F4C_fill):
     def __init__(self):
