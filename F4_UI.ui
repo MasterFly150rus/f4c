@@ -1387,8 +1387,6 @@
     <addaction name="delete_action"/>
     <addaction name="separator"/>
     <addaction name="info_action"/>
-    <addaction name="fly_prog_action"/>
-    <addaction name="stend_action"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -1432,8 +1430,6 @@
    <addaction name="delete_action"/>
    <addaction name="separator"/>
    <addaction name="info_action"/>
-   <addaction name="fly_prog_action"/>
-   <addaction name="stend_action"/>
    <addaction name="separator"/>
    <addaction name="line_action"/>
    <addaction name="tour_I_action"/>
@@ -1497,21 +1493,6 @@
     <string>Удалить участника</string>
    </property>
   </action>
-  <action name="fly_prog_action">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="Resourses.qrc">
-     <normaloff>:/images/Tools_ico/checklist_icon_129185.png</normaloff>:/images/Tools_ico/checklist_icon_129185.png</iconset>
-   </property>
-   <property name="text">
-    <string>Полетная программа</string>
-   </property>
-   <property name="toolTip">
-    <string>Полетная программа</string>
-   </property>
-  </action>
   <action name="info_action">
    <property name="enabled">
     <bool>false</bool>
@@ -1525,21 +1506,6 @@
    </property>
    <property name="toolTip">
     <string>Информация</string>
-   </property>
-  </action>
-  <action name="stend_action">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="Resourses.qrc">
-     <normaloff>:/images/Tools_ico/Exam.png</normaloff>:/images/Tools_ico/Exam.png</iconset>
-   </property>
-   <property name="text">
-    <string>Стендовые оценки</string>
-   </property>
-   <property name="toolTip">
-    <string>Стендовые оценки</string>
    </property>
   </action>
   <action name="line_action">

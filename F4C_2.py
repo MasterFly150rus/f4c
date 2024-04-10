@@ -1,17 +1,14 @@
 from F4_UI import Ui_MainWindow
 from F4C_fill_UI import Ui_F4C_fill
-from Flyprog import Ui_FlyProg
-from Static import Ui_Static
-from Info import Ui_Info
 from TourI_UI import Ui_TourI
 from TourII_UI import Ui_TourII
 from Flylist import Ui_Flylist
-from Gradelist import Ui_Gradelist
 from Timetable import Ui_Timetable
+from Data import Ui_Data
 from PyQt5 import QtWidgets, QtGui, QtPrintSupport, QtCore
 from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow, QMessageBox, QFileDialog, QHeaderView
 from PyQt5.Qt import QApplication, Qt
-from PyQt5.QtCore import QDate, QAbstractTableModel, QModelIndex, QSortFilterProxyModel
+from PyQt5.QtCore import QDate, QAbstractTableModel, QModelIndex, QSortFilterProxyModel, QDateTime
 import sys
 import pickle
 from pathlib import Path
@@ -21,16 +18,15 @@ headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип'
 tourI_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат', 'Место')
 tourII_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат', 'Место')
 timetable_headers = {0: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка'),
-                     1: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка'),
-                     2: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Результат')}
+                     1: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат',  'Жеребьёвка'),
+                     2: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат')}
 
 class F4C(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.buttons = (self.add_action, self.delete_action, self.info_action, self.fly_prog_action,
-                        self.stend_action, self.line_action, self.tour_I_action, self.tour_II_action,
-                        self.result_action)
+        self.buttons = (self.add_action, self.delete_action, self.info_action, self.line_action, self.tour_I_action,
+                        self.tour_II_action, self.result_action)
         self.locate_data = Info()
         self.referee_1 = Referee()
         self.referee_2 = Referee()
@@ -42,13 +38,10 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.referee_8 = Referee()
         self.referee_9 = Referee()
         self.referee_10 = Referee()
+        self.memberdata = Data()
         self.f4cui = f4cWindow()
-        self.flyui = flyWin()
-        self.statui = Static()
-        self.infoui = Inform()
         self.tour = TourI()
         self.tourII = TourII()
-        self.gradelistui = GradeList()
         self.flylistui = FlyList()
         self.timetable = Timetable()
         self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -81,7 +74,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.f4c_1_dict = {8: 'a) текстура поверхности', 9: 'b) соотв. текстуры масштабу', 10: 'а) качество',
                            11: 'b) сложность', 12: 'а) точность', 13: 'b) сложность'}
         for fly_items in range(2, 10):
-            exec(f'self.flyui.comboBox_{fly_items}.addItems(self.fly_tup)')
+            exec(f'self.memberdata.comboBox_{fly_items}.addItems(self.fly_tup)')
         self.currentmember = None
         self.file = ''
         self.file_in = ''
@@ -97,28 +90,50 @@ class F4C(QMainWindow, Ui_MainWindow):
                                (self.lineEdit_9_0, self.lineEdit_9_1, self.lineEdit_9_2))
         self.classes = {'F-4C': self.tableView, 'F-4C (Ю)': self.tableView_2, 'F-4H': self.tableView_3,
                         'F-4G': self.tableView_4}
+        self.stat_disable_boxes = (self.memberdata.dsb_1_8, self.memberdata.dsb_2_8, self.memberdata.dsb_3_8,
+                                   self.memberdata.dsb_1_10, self.memberdata.dsb_2_10, self.memberdata.dsb_3_10,
+                                   self.memberdata.dsb_1_11, self.memberdata.dsb_2_11, self.memberdata.dsb_3_11,
+                                   self.memberdata.dsb_1_12, self.memberdata.dsb_2_12, self.memberdata.dsb_3_12)
+        self.info_lineedits = (self.memberdata.lineEdit_surname, self.memberdata.lineEdit_name,
+                            self.memberdata.lineEdit_region, self.memberdata.lineEdit_prototype)
+        self.info_boxes = (self.memberdata.scale_box, self.memberdata.speed_box, self.memberdata.toss_box)
+        self.prog_combo = (self.memberdata.comboBox_2, self.memberdata.comboBox_3, self.memberdata.comboBox_4,
+                           self.memberdata.comboBox_5, self.memberdata.comboBox_6, self.memberdata.comboBox_7,
+                           self.memberdata.comboBox_8, self.memberdata.comboBox_9)
+        self.prog_buttons = (self.memberdata.radioButton, self.memberdata.fl_rb_1, self.memberdata.fl_rb_2,
+                             self.memberdata.fl_rb_3)
         for cls in self.classes:
             self.f4cui.cls_box.addItem(cls)
+        for lineedit in self.info_lineedits:
+            lineedit.textChanged.connect(lambda: self.set_enable(self.memberdata.save_info_btn))
+        for box in self.info_boxes:
+            box.valueChanged.connect(lambda: self.set_enable(self.memberdata.save_info_btn))
+        for combo in self.prog_combo:
+            combo.currentIndexChanged.connect(lambda: self.set_enable(self.memberdata.save_prog_btn))
+        for flrb in self.prog_buttons:
+            flrb.clicked.connect(lambda: self.set_enable(self.memberdata.save_prog_btn))
         self.f4cui.cls_box.currentIndexChanged.connect(lambda: self.change_tab(self.f4cui.cls_box.currentIndex() + 1))
         self.f4cui.cls_box.currentIndexChanged.connect(lambda: self.tabWidget.setCurrentIndex(self.f4cui.cls_box.currentIndex() + 1))
         self.set_start_date()
         self.set_end_date()
         self.add_action.triggered.connect(self.get_data)
         self.delete_action.triggered.connect(self.qwestion)
-        self.info_action.triggered.connect(self.get_info)
-        self.fly_prog_action.triggered.connect(self.get_prog)
-        self.stend_action.triggered.connect(self.get_static)
+        self.info_action.triggered.connect(self.data_filling)
         self.tour_I_action.triggered.connect(self.tour_1_out)
         self.tour_II_action.triggered.connect(self.tour_2_out)
         self.result_action.triggered.connect(lambda: self.handlePreview(self.tour_3_request))
         self.line_action.triggered.connect(self.timetable_preview)
-        self.tableView.doubleClicked.connect(self.get_info)
-        self.tableView_2.doubleClicked.connect(self.get_info)
-        self.tableView_3.doubleClicked.connect(self.get_info)
-        self.tableView_4.doubleClicked.connect(self.get_info)
+        self.tableView.doubleClicked.connect(self.data_filling)
+        self.tableView_2.doubleClicked.connect(self.data_filling)
+        self.tableView_3.doubleClicked.connect(self.data_filling)
+        self.tableView_4.doubleClicked.connect(self.data_filling)
         self.tour.pushButton.clicked.connect(lambda: self.handlePreview(self.tour_1_request))
         self.tourII.pushButton.clicked.connect(lambda: self.handlePreview(self.tour_2_request))
-
+        self.timetable.print_btn.clicked.connect(lambda: self.handlePreview(self.timetable_1_request
+                                                                            if self.timetable.radioButton.isChecked()
+                                                                            else self.timetable_2_request
+                                                                            if self.timetable.radioButton_2.isChecked()
+                                                                            else self.timetable_3_request))
         self.lineEdit_0_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_0_0.text(), 0))
         self.lineEdit_1_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_1_0.text(), 1))
         self.lineEdit_2_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_2_0.text(), 2))
@@ -156,30 +171,30 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.lineEdit_27.textChanged.connect(self.set_ekp_f4cu)
         self.dateEdit.dateChanged.connect(self.set_start_date)
         self.dateEdit_2.dateChanged.connect(self.set_end_date)
+        self.timetable.dateTimeEdit.dateTimeChanged.connect(self.set_tourtime)
         self.action.triggered.connect(self.save_)
         self.action_2.triggered.connect(self.filein)
         self.action_3.triggered.connect(self.save_as)
         self.about_action.triggered.connect(self.show_about)
         self.tabWidget.currentChanged.connect(lambda: self.change_tab(self.tabWidget.currentIndex()))
         self.f4cui.buttonBox.accepted.connect(self.new_member)
-        self.flyui.radioButton.clicked.connect(self.get_prog)
-        self.flyui.radioButton_1.clicked.connect(self.get_prog)
-        self.flyui.radioButton_2.clicked.connect(self.get_prog)
-        self.flyui.radioButton_3.clicked.connect(self.get_prog)
-        self.flyui.pushButton.clicked.connect(self.fly_list)
-        self.flyui.pushButton_2.clicked.connect(self.grade_list)
-        self.flyui.buttonBox.clicked.connect(self.flyui_action)
-        self.infoui.buttonBox.accepted.connect(self.set_info)
-        self.gradelistui.pushButton.clicked.connect(lambda: self.handlePreview(self.gradelist_request))
-        self.gradelistui.buttonBox.clicked.connect(self.gradelist_action)
-        self.gradelistui.radioButton_1.clicked.connect(self.grade_list)
-        self.gradelistui.radioButton_2.clicked.connect(self.grade_list)
-        self.gradelistui.radioButton_3.clicked.connect(self.grade_list)
+        self.memberdata.radioButton.clicked.connect(self.get_prog)
+        self.memberdata.fl_rb_1.clicked.connect(self.get_prog)
+        self.memberdata.fl_rb_2.clicked.connect(self.get_prog)
+        self.memberdata.fl_rb_3.clicked.connect(self.get_prog)
+        self.memberdata.flylist_btn.clicked.connect(self.fly_list)
+        self.memberdata.save_info_btn.clicked.connect(self.set_info)
+        self.memberdata.save_prog_btn.clicked.connect(self.set_prog)
+        self.memberdata.print_grades_btn.clicked.connect(lambda: self.handlePreview(self.gradelist_request))
+        self.memberdata.save_grades_btn.clicked.connect(self.set_grades)
+        self.memberdata.gl_rb_1.clicked.connect(self.grade_list)
+        self.memberdata.gl_rb_2.clicked.connect(self.grade_list)
+        self.memberdata.gl_rb_3.clicked.connect(self.grade_list)
         self.flylistui.pushButton.clicked.connect(lambda: self.handlePreview(self.flylist_request))
-        self.statui.pushButton.clicked.connect(lambda: self.handlePreview(self.static_f4h_request
+        self.memberdata.print_static_btn.clicked.connect(lambda: self.handlePreview(self.static_f4h_request
                                                                           if self.memberclass == 'F-4H'
                                                                           else self.static_request))
-        self.statui.buttonBox.clicked.connect(self.static_action)
+        self.memberdata.save_static_btn.clicked.connect(self.set_static)
         self.f4c_data =[]
         self.f4cu_data = []
         self.f4h_data = []
@@ -202,7 +217,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.models = {'F-4C': self.f4c_model, 'F-4C (Ю)': self.f4cu_model, 'F-4H': self.f4h_model,
                        'F-4G':  self.f4g_model}
         self.in_models = {'F-4C': self.f4c_in_model, 'F-4C (Ю)': self.f4cu_in_model, 'F-4H': self.f4h_in_model,
-                       'F-4G':  self.f4g_in_model}
+                       'F-4G': self.f4g_in_model}
         self.clearfields = (self.f4cui.lineEdit_2, self.f4cui.lineEdit_3, self.f4cui.lineEdit_4, self.f4cui.lineEdit_5)
         self.zerofields = (self.f4cui.scale_box, self.f4cui.speed_box, self.f4cui.toss_box)
         self.r_buttons = (self.timetable.radioButton, self.timetable.radioButton_2, self.timetable.radioButton_3)
@@ -223,7 +238,6 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     @staticmethod
     def show_about(self):
-        print('triggered')
         report_ = QMessageBox()
         report_.setWindowTitle("О программе")
         icon = QtGui.QIcon()
@@ -231,12 +245,17 @@ class F4C(QMainWindow, Ui_MainWindow):
         report_.setWindowIcon(icon)
         report_.setText('Программа организации хранения и обработки информации об участниках соревнований по'
                         ' авиамодельному спорту в классах F-4C, F-4C(Ю), F-4H, F-4G ФАС РОССИИ.\n'
-                        'Версия 2.3\n'
+                        'Версия 2.4\n'
                         'Автор: Кирсанов Сергей\n'
+                        'tel: +7 926-169-91-68\n'
                         'mailto: masterfly@mail.ru')
         report_.setIcon(QMessageBox.Information)
         report_.setStandardButtons(QMessageBox.Ok)
         report_.exec_()
+
+    def set_enable(self, btn):
+        if not btn.isEnabled():
+            btn.setEnabled(True)
 
     def set_members(self, cls):
         data = self.dataclasses[cls]
@@ -357,24 +376,38 @@ class F4C(QMainWindow, Ui_MainWindow):
     def set_end_date(self):
         self.locate_data.end_date = self.dateEdit_2.date()
 
-    def get_prog(self):
-        row = self.table.currentIndex().row()
-        if row == -1:
-            self.error_('Выберите участника!')
-            return
-        id_index = self.model.index(row, 0)
-        member_id = self.model.data(id_index, Qt.DisplayRole)
-        for i in Member.items:
-            if i.number == member_id and i.cls == self.memberclass:
-                self.currentmember = i
-                self.flyui.member_label.setText(f'{i.cls} {i.surname} {i.name}')
-                for j in range(2, 10):
-                    exec(f'self.flyui.comboBox_{str(j)}.setCurrentIndex(int(i.fig_{str(j)}[' \
-                         f'{"1" if self.flyui.radioButton_2.isChecked() else "2" if self.flyui.radioButton_3.isChecked() else "0"}]))')
+    def set_tourtime(self):
+        tourindex = self.tourindex()
+        if self.memberclass == 'F-4C':
+            if tourindex == 0:
+                self.locate_data.f4c_tour_1 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 1:
+                self.locate_data.f4c_tour_2 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 2:
+                self.locate_data.f4c_tour_3 = self.timetable.dateTimeEdit.dateTime()
+        if self.memberclass == 'F-4C (Ю)':
+            if tourindex == 0:
+                self.locate_data.f4cu_tour_1 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 1:
+                self.locate_data.f4cu_tour_2 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 2:
+                self.locate_data.f4cu_tour_3 = self.timetable.dateTimeEdit.dateTime()
+        if self.memberclass == 'F-4H':
+            if tourindex == 0:
+                self.locate_data.f4h_tour_1 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 1:
+                self.locate_data.f4h_tour_2 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 2:
+                self.locate_data.f4h_tour_3 = self.timetable.dateTimeEdit.dateTime()
+        if self.memberclass == 'F-4G':
+            if tourindex == 0:
+                self.locate_data.f4g_tour_1 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 1:
+                self.locate_data.f4g_tour_2 = self.timetable.dateTimeEdit.dateTime()
+            if tourindex == 2:
+                self.locate_data.f4g_tour_3 = self.timetable.dateTimeEdit.dateTime()
 
-        self.flyui.show()
-
-    def get_info(self):
+    def data_filling(self):
         row = self.table.currentIndex().row()
         if row == -1:
             self.error_('Выберите участника!')
@@ -383,19 +416,33 @@ class F4C(QMainWindow, Ui_MainWindow):
         member_number = self.model.data(number_index, Qt.DisplayRole)
         for i in Member.items:
             if i.number == member_number and i.cls == self.memberclass:
-                self.infoui.label_number.setText(str(i.number))
-                self.infoui.lineEdit_surname.setText(str(i.surname))
-                self.infoui.lineEdit_name.setText(str(i.name))
-                self.infoui.lineEdit_prototype.setText(str(i.prototype))
-                self.infoui.scale_box.setValue(float(i.scale))
-                self.infoui.speed_box.setValue(int(i.speed))
-                self.infoui.lineEdit_region.setText(str(i.region))
-                self.infoui.label_cls.setText(str(i.cls))
-                self.infoui.toss_box.setValue(int(i.id))
-                self.infoui.show()
+                self.currentmember = i
+                self.memberdata.label_number.setText(str(i.number))
+                self.memberdata.lineEdit_surname.setText(str(i.surname))
+                self.memberdata.lineEdit_name.setText(str(i.name))
+                self.memberdata.lineEdit_prototype.setText(str(i.prototype))
+                self.memberdata.scale_box.setValue(float(i.scale))
+                self.memberdata.speed_box.setValue(int(i.speed))
+                self.memberdata.lineEdit_region.setText(str(i.region))
+                self.memberdata.label_cls.setText(str(i.cls))
+                self.memberdata.toss_box.setValue(int(i.id))
+
+                self.memberdata.member_label.setText(f'{i.cls} {i.surname} {i.name}')
+                for j in range(2, 10):
+                    exec(f'self.memberdata.comboBox_{str(j)}.setCurrentIndex(int(i.fig_{str(j)}[' \
+                         f'{"1" if self.memberdata.fl_rb_2.isChecked() else "2" if self.memberdata.fl_rb_3.isChecked() else "0"}]))')
+
+        self.grade_list()
+        self.get_static()
+
+        self.memberdata.show()
+
+    def get_prog(self):
+        for j in range(2, 10):
+            exec(f'self.memberdata.comboBox_{str(j)}.setCurrentIndex(int(self.currentmember.fig_{str(j)}[' \
+                 f'{"1" if self.memberdata.fl_rb_2.isChecked() else "2" if self.memberdata.fl_rb_3.isChecked() else "0"}]))')
 
     def get_static(self):
-        row = self.table.currentIndex().row()
         if self.memberclass == 'F-4H':
             stat_k = self.kh_tup
             stat_lenth = 10
@@ -404,75 +451,55 @@ class F4C(QMainWindow, Ui_MainWindow):
             stat_k = self.k_tup
             stat_lenth = 13
             dict = self.f4c_dict
-        if row == -1:
-            self.error_('Выберите участника!')
-            return
-        number_index = self.model.index(row, 0)
-        member_number = self.model.data(number_index, Qt.DisplayRole)
-        for i in Member.items:
-            if i.number == member_number and i.cls == self.memberclass:
-                self.currentmember = i
-                correct_k = i.static_k if self.memberclass == 'F-4G' else 1
-                self.statui.surname_lbl.setText(str(self.currentmember.surname))
-                self.statui.name_lbl.setText(str(self.currentmember.name))
-                self.statui.number_lbl.setText(f'№ {str(self.currentmember.number)}')
-                self.statui.prototype_lbl.setText(str(self.currentmember.prototype))
-                self.statui.texture.setText(dict.get(4))
-                self.statui.skill.setText(dict.get(5))
-                self.statui.scale_2.setText(dict.get(6))
-                self.statui.label_18.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(8))
-                self.statui.label_19.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(9))
-                self.statui.label_20.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(10))
-                self.statui.label_21.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(11))
-                self.statui.label_24.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(12))
-                self.statui.label_25.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(13))
-                self.statui.dsb_1_8.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_2_8.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_3_8.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_1_10.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_1_11.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_1_12.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_2_10.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_2_11.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_2_12.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_3_10.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_3_11.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_3_12.setEnabled(False if self.memberclass == 'F-4H' else True)
-                self.statui.dsb_k.setValue(correct_k if self.memberclass == 'F-4G' else 1)
-                self.statui.dsb_bonus.setValue(self.currentmember.bonus if self.memberclass == 'F-4H' else 0)
+        correct_k = self.currentmember.static_k if self.memberclass == 'F-4G' else 1
+        self.memberdata.surname_lbl.setText(str(self.currentmember.surname))
+        self.memberdata.name_lbl.setText(str(self.currentmember.name))
+        self.memberdata.number_lbl.setText(f'№ {str(self.currentmember.number)}')
+        self.memberdata.prototype_lbl.setText(str(self.currentmember.prototype))
+        self.memberdata.texture.setText(dict.get(4))
+        self.memberdata.skill.setText(dict.get(5))
+        self.memberdata.scale_2.setText(dict.get(6))
+        self.memberdata.texture_a_lbl.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(8))
+        self.memberdata.scale_b_lbl.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(9))
+        self.memberdata.quality_lbl.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(10))
+        self.memberdata.difficulty_lbl.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(11))
+        self.memberdata.label_24.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(12))
+        self.memberdata.difficulty_2_lbl.setText('' if self.memberclass == 'F-4H' else self.f4c_1_dict.get(13))
+        for box in self.stat_disable_boxes:
+            box.setEnabled(False if self.memberclass == 'F-4H' else True)
+            if self.memberclass == 'F-4H':
+                box.setValue(0.0)
+        self.memberdata.dsb_k.setValue(correct_k if self.memberclass == 'F-4G' else 1)
+        self.memberdata.dsb_bonus.setValue(self.currentmember.bonus if self.memberclass == 'F-4H' else 0)
 
-                for k in range(13):
-                    item = '' if stat_k[k] == 0 else stat_k[k]
-                    exec(f'self.statui.k_{str(k)}.setText(str({str(item)}))')
-                sum_1 = 0
-                sum_2 = 0
-                sum_3 = 0
-                for j in range(stat_lenth):
-                    grade_1 = float(self.currentmember.stat_grade_1[j])
-                    grade_2 = float(self.currentmember.stat_grade_2[j])
-                    grade_3 = float(self.currentmember.stat_grade_3[j])
-                    k = stat_k[j]
-                    score_1 = str(round(k * grade_1, 1))
-                    score_2 = str(round(k * grade_2, 1))
-                    score_3 = str(round(k * grade_3, 1))
-                    sum_1 = sum_1 + float(score_1)
-                    sum_2 = sum_2 + float(score_2)
-                    sum_3 = sum_3 + float(score_3)
-
-                    exec(f'self.statui.dsb_1_{str(j)}.setValue(i.stat_grade_1[{str(j)}])')
-                    exec(f'self.statui.dsb_2_{str(j)}.setValue(i.stat_grade_2[{str(j)}])')
-                    exec(f'self.statui.dsb_3_{str(j)}.setValue(i.stat_grade_3[{str(j)}])')
-                    exec(f'self.statui.score_1_{str(j)}.setText(''score_1'')')
-                    exec('self.statui.score_2_' + str(j) + '.setText(''score_2'')')
-                    exec('self.statui.score_3_' + str(j) + '.setText(''score_3'')')
-
-                total = (sum_1 + sum_2 + sum_3) * correct_k + self.currentmember.bonus
-                self.statui.sum_1.setText(str(round(sum_1, 2)))
-                self.statui.sum_2.setText(str(round(sum_2, 2)))
-                self.statui.sum_3.setText(str(round(sum_3, 2)))
-                self.statui.total_score.setText(str(round(total, 2)))
-
-        self.statui.show()
+        for k in range(13):
+            item = '' if stat_k[k] == 0 else stat_k[k]
+            exec(f'self.memberdata.k_{str(k)}.setText(str({str(item)}))')
+        sum_1 = 0
+        sum_2 = 0
+        sum_3 = 0
+        for j in range(stat_lenth):
+            grade_1 = float(self.currentmember.stat_grade_1[j])
+            grade_2 = float(self.currentmember.stat_grade_2[j])
+            grade_3 = float(self.currentmember.stat_grade_3[j])
+            k = stat_k[j]
+            score_1 = str(round(k * grade_1, 1))
+            score_2 = str(round(k * grade_2, 1))
+            score_3 = str(round(k * grade_3, 1))
+            sum_1 = sum_1 + float(score_1)
+            sum_2 = sum_2 + float(score_2)
+            sum_3 = sum_3 + float(score_3)
+            exec(f'self.memberdata.dsb_1_{str(j)}.setValue(self.currentmember.stat_grade_1[{str(j)}])')
+            exec(f'self.memberdata.dsb_2_{str(j)}.setValue(self.currentmember.stat_grade_2[{str(j)}])')
+            exec(f'self.memberdata.dsb_3_{str(j)}.setValue(self.currentmember.stat_grade_3[{str(j)}])')
+            exec(f'self.memberdata.score_1_{str(j)}.setText(''score_1'')')
+            exec('self.memberdata.score_2_' + str(j) + '.setText(''score_2'')')
+            exec('self.memberdata.score_3_' + str(j) + '.setText(''score_3'')')
+        total = (sum_1 + sum_2 + sum_3) * correct_k + self.currentmember.bonus
+        self.memberdata.sum_1.setText(str(round(sum_1, 1)))
+        self.memberdata.sum_2.setText(str(round(sum_2, 1)))
+        self.memberdata.sum_3.setText(str(round(sum_3, 1)))
+        self.memberdata.total_score.setText(str(round(total, 1)))
 
     def tour_1_out(self):
         source_data = self.dataclasses[self.memberclass]
@@ -570,8 +597,8 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.data = self.dataclasses[self.memberclass]
             self.model = self.models[self.memberclass]
             self.f4cui.cls_box.setCurrentText(self.memberclass)
-            self.statui.dsb_bonus.setEnabled(True) if index == 3 else self.statui.dsb_bonus.setEnabled(False)
-            self.statui.dsb_k.setEnabled(True) if index == 4 else self.statui.dsb_k.setEnabled(False)
+            self.memberdata.dsb_bonus.setEnabled(True) if index == 3 else self.memberdata.dsb_bonus.setEnabled(False)
+            self.memberdata.dsb_k.setEnabled(True) if index == 4 else self.memberdata.dsb_k.setEnabled(False)
 
     def save_as(self):
         dialog = QWidget()
@@ -607,6 +634,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.clear_all()
         with open(self.file_in, 'rb') as f:
             self.locate_data = pickle.load(f)
+            Info.items.append(self.locate_data)
             reflist = pickle.load(f)
             memberlist = pickle.load(f)
             for i in reflist:
@@ -637,8 +665,10 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.change_tab(self.tabWidget.currentIndex())
 
     def set_referees(self):
-        grade_referee_box = (self.gradelistui.comboBox_9, self.gradelistui.comboBox_10, self.gradelistui.comboBox_11)
-        stat_referee_box = (self.statui.comboBox_1, self.statui.comboBox_2, self.statui.comboBox_3)
+        grade_referee_box = (self.memberdata.grade_ref_box_1, self.memberdata.grade_ref_box_2,
+                             self.memberdata.grade_ref_box_3)
+        stat_referee_box = (self.memberdata.stend_ref_box_1, self.memberdata.stend_ref_box_2,
+                            self.memberdata.stend_ref_box_3)
 
         for k, field in enumerate(grade_referee_box):
             field.clear()
@@ -683,7 +713,6 @@ class F4C(QMainWindow, Ui_MainWindow):
         Referee.items[num].patronymic = patronymic
 
     def filling(self, cls):
-        # table = self.classes[cls]
         self.data = self.dataclasses[cls]
         self.model = self.in_models[cls]
         results_list = []
@@ -932,6 +961,177 @@ class F4C(QMainWindow, Ui_MainWindow):
         document.setHtml(page)
         document.print_(printer)
 
+    def timetable_1_request(self, printer):
+        printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+        begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
+        end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
+        date = "{}".format(self.timetable.dateTimeEdit.date().toString('dd.MM.yyyy'))
+        time = "{}".format(self.timetable.dateTimeEdit.time().toString('hh:mm'))
+
+        table = self.timetable.tableView
+        model = table.model()
+        first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
+        ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
+        content = ''
+        top = f'<!DOCTYPE html><html lang="ru">' \
+              f'<head>' \
+              f'<meta charset="UTF-8">' \
+              f'</head>' \
+              f'<body>' \
+              f'<table width="100%" border="0" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
+              f'<tr>' \
+              f'<td width="25%" align="center"><img src="Ico/FAS-f.png"><br></td>' \
+              f'<td rowspan="4" align="center" width="60%"><font size="4">ФЕДЕРАЦИЯ АВИАМОДЕЛЬНОГО СПОРТА РОССИИ<br>' \
+              f'<br></font>' \
+              f'<u>{first} России в классе радиоуправляемых моделей-копий самолетов {self.memberclass}</u><br><br>' \
+              f'{self.locate_data.locate} {begin_date} - {end_date} г.<br><br>' \
+              f'ПОЛЕТНАЯ ТАБЛИЦА<br>' \
+              f'I ТУР <br>' \
+              f'Начало: {time} {date}' \
+              f'</td>' \
+              f'<td>№ ЕКП:{ekp}</td>' \
+              f'</table>' \
+              f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
+              f'<tr>' \
+              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="22%">Фамилия</td>' \
+              f'<td align="center" width="21%">Имя</td>' \
+              f'<td align="center" width="21%">Регион</td>' \
+              f'<td align="center" width="21%">Прототип</td>' \
+              f'<td align="center" width="12%">Жеребьевка</td>' \
+              f'</tr>'
+
+        for i in range(model.rowCount()):
+            content = content + '<tr>'
+            for k in range(model.columnCount()):
+                index = model.index(i, k)
+                item = model.data(index)
+                content = content + f'<td align="center">{item}</td>'
+            content = content + '</tr>'
+        content = content + '</table>'
+        bottom = f'</body>' \
+                 f'</html>'
+        page = top + content + bottom
+        document = QtGui.QTextDocument()
+        document.setHtml(page)
+        document.print_(printer)
+
+    def timetable_2_request(self, printer):
+        printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+        begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
+        end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
+        date = "{}".format(self.timetable.dateTimeEdit.date().toString('dd.MM.yyyy'))
+        time = "{}".format(self.timetable.dateTimeEdit.time().toString('hh:mm'))
+
+        table = self.timetable.tableView
+        model = table.model()
+        first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
+        ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
+        content = ''
+        top = f'<!DOCTYPE html><html lang="ru">' \
+              f'<head>' \
+              f'<meta charset="UTF-8">' \
+              f'</head>' \
+              f'<body>' \
+              f'<table width="100%" border="0" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
+              f'<tr>' \
+              f'<td width="25%" align="center"><img src="Ico/FAS-f.png"><br></td>' \
+              f'<td rowspan="4" align="center" width="60%"><font size="4">ФЕДЕРАЦИЯ АВИАМОДЕЛЬНОГО СПОРТА РОССИИ<br>' \
+              f'<br></font>' \
+              f'<u>{first} России в классе радиоуправляемых моделей-копий самолетов {self.memberclass}</u><br><br>' \
+              f'{self.locate_data.locate} {begin_date} - {end_date} г.<br><br>' \
+              f'ПОЛЕТНАЯ ТАБЛИЦА<br>' \
+              f'II ТУР <br>' \
+              f'Начало: {time} {date}' \
+              f'</td>' \
+              f'<td>№ ЕКП:{ekp}</td>' \
+              f'</table>' \
+              f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
+              f'<tr>' \
+              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="16%">Фамилия</td>' \
+              f'<td align="center" width="15%">Имя</td>' \
+              f'<td align="center" width="15%">Регион</td>' \
+              f'<td align="center" width="16%">Прототип</td>' \
+              f'<td align="center" width="10%">Стенд</td>' \
+              f'<td align="center" width="10%">I тур</td>' \
+              f'<td align="center" width="10%">Результат</td>' \
+              f'<td align="center" width="6%">Жер.</td>' \
+              f'</tr>'
+
+        for i in range(model.rowCount()):
+            content = content + '<tr>'
+            for k in range(model.columnCount()):
+                index = model.index(i, k)
+                item = model.data(index)
+                content = content + f'<td align="center">{item}</td>'
+            content = content + '</tr>'
+        content = content + '</table>'
+        bottom = f'</body>' \
+                 f'</html>'
+        page = top + content + bottom
+        document = QtGui.QTextDocument()
+        document.setHtml(page)
+        document.print_(printer)
+
+    def timetable_3_request(self, printer):
+        printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+        begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
+        end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
+        date = "{}".format(self.timetable.dateTimeEdit.date().toString('dd.MM.yyyy'))
+        time = "{}".format(self.timetable.dateTimeEdit.time().toString('hh:mm'))
+
+        table = self.timetable.tableView
+        model = table.model()
+        first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
+        ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
+        content = ''
+        top = f'<!DOCTYPE html><html lang="ru">' \
+              f'<head>' \
+              f'<meta charset="UTF-8">' \
+              f'</head>' \
+              f'<body>' \
+              f'<table width="100%" border="0" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
+              f'<tr>' \
+              f'<td width="25%" align="center"><img src="Ico/FAS-f.png"><br></td>' \
+              f'<td rowspan="4" align="center" width="60%"><font size="4">ФЕДЕРАЦИЯ АВИАМОДЕЛЬНОГО СПОРТА РОССИИ<br>' \
+              f'<br></font>' \
+              f'<u>{first} России в классе радиоуправляемых моделей-копий самолетов {self.memberclass}</u><br><br>' \
+              f'{self.locate_data.locate} {begin_date} - {end_date} г.<br><br>' \
+              f'ПОЛЕТНАЯ ТАБЛИЦА<br>' \
+              f'III ТУР <br>' \
+              f'Начало: {time} {date}' \
+              f'</td>' \
+              f'<td>№ ЕКП:{ekp}</td>' \
+              f'</table>' \
+              f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
+              f'<tr>' \
+              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="16%">Фамилия</td>' \
+              f'<td align="center" width="15%">Имя</td>' \
+              f'<td align="center" width="15%">Регион</td>' \
+              f'<td align="center" width="16%">Прототип</td>' \
+              f'<td align="center" width="10%">Стенд</td>' \
+              f'<td align="center" width="10%">I тур</td>' \
+              f'<td align="center" width="10%">II тур</td>' \
+              f'<td align="center" width="6%">Результат</td>' \
+              f'</tr>'
+
+        for i in range(model.rowCount()):
+            content = content + '<tr>'
+            for k in range(model.columnCount()):
+                index = model.index(i, k)
+                item = model.data(index)
+                content = content + f'<td align="center">{item}</td>'
+            content = content + '</tr>'
+        content = content + '</table>'
+        bottom = f'</body>' \
+                 f'</html>'
+        page = top + content + bottom
+        document = QtGui.QTextDocument()
+        document.setHtml(page)
+        document.print_(printer)
+
     def fly_list(self):
         self.flylistui.surname_lbl.setText(str(self.currentmember.surname))
         self.flylistui.name_lbl.setText(str(self.currentmember.name))
@@ -942,14 +1142,14 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.flylistui.speed_lbl.setText(str(self.currentmember.speed))
         self.flylistui.cls_label.setText(str(self.currentmember.cls))
         for j in range(1, 9):
-            exec(f'self.flylistui.label_{str(j)}_1.setText(self.flyui.comboBox_{str(j + 1)}.currentText())')
+            exec(f'self.flylistui.label_{str(j)}_1.setText(self.memberdata.comboBox_{str(j + 1)}.currentText())')
         for k in range(13):
-            exec(f'self.flylistui.label_{str(k)}_3.setText("X" if (self.flyui.radioButton_1.isChecked()'
-                 f' or self.flyui.radioButton_2.isChecked()) else "")')
-            exec(f'self.flylistui.label_{str(k)}_4.setText("X" if (self.flyui.radioButton_1.isChecked()'
-                 f' or self.flyui.radioButton_3.isChecked()) else "")')
-            exec(f'self.flylistui.label_{str(k)}_5.setText("X" if (self.flyui.radioButton_2.isChecked()'
-                 f' or self.flyui.radioButton_3.isChecked()) else "")')
+            exec(f'self.flylistui.label_{str(k)}_3.setText("X" if (self.memberdata.fl_rb_1.isChecked()'
+                 f' or self.memberdata.fl_rb_2.isChecked()) else "")')
+            exec(f'self.flylistui.label_{str(k)}_4.setText("X" if (self.memberdata.fl_rb_1.isChecked()'
+                 f' or self.memberdata.fl_rb_3.isChecked()) else "")')
+            exec(f'self.flylistui.label_{str(k)}_5.setText("X" if (self.memberdata.fl_rb_2.isChecked()'
+                 f' or self.memberdata.fl_rb_3.isChecked()) else "")')
 
         self.flylistui.show()
 
@@ -957,109 +1157,191 @@ class F4C(QMainWindow, Ui_MainWindow):
         total_list = []
         bonus = self.currentmember.bonus
 
-        self.gradelistui.name.setText(f'{self.currentmember.surname} {self.currentmember.prototype}')
+        self.memberdata.name.setText(f'{self.currentmember.surname} {self.currentmember.prototype}')
 
         for m in range(2, 10):
-            exec(f'self.gradelistui.fig_{str(m)}.setText(self.fly_tup[self.currentmember.fig_{str(m)}[{str(self.tourcount())}]])')
+            exec(f'self.memberdata.fig_{str(m)}.setText(self.fly_tup[self.currentmember.fig_{str(m)}[{str(self.tourcount())}]])')
 
         for j in range(1, 14):
-            exec(f'self.gradelistui.total_{str(j)}.'
+            exec(f'self.memberdata.total_{str(j)}.'
                  f'setText(str(sum(self.currentmember.fly_grade_{str(j)}[{str(self.tourcount())}]) * '
-                 f'int(self.gradelistui.k_{str(j)}.text())))')
-            exec(f'total_list.append(float(self.gradelistui.total_{str(j)}.text()))')
+                 f'int(self.memberdata.gk_{str(j)}.text())))')
+            exec(f'total_list.append(float(self.memberdata.total_{str(j)}.text()))')
 
         for k in range(1, 14):
             for l in range(1, 4):
-                exec(f'self.gradelistui.sb_{str(l)}_{str(k)}.setValue(self.currentmember.'
+                exec(f'self.memberdata.sb_{str(l)}_{str(k)}.setValue(self.currentmember.'
                      f'fly_grade_{str(k)}[{str(self.tourcount())}][{str(l - 1)}])')
-        self.gradelistui.total.setText(str(sum(total_list)))
-        self.gradelistui.show()
+        self.memberdata.total.setText(str(sum(total_list)))
 
     def tourcount(self):
         tour = 0
         self.tournumber = 'I'
-        if self.gradelistui.radioButton_2.isChecked():
+        if self.memberdata.gl_rb_2.isChecked():
             tour = 1
             self.tournumber = 'II'
-        if self.gradelistui.radioButton_3.isChecked():
+        if self.memberdata.gl_rb_3.isChecked():
             tour = 2
             self.tournumber = 'III'
-        self.gradelistui.label_54.setText(f'{self.tournumber} тур')
+        self.memberdata.label_55.setText(f'{self.tournumber} тур')
         return tour
-
-    def flyui_action(self, btn):
-        if btn.text() in ['OK', '&OK', 'Apply', '&Apply']:
-            self.set_prog()
 
     def set_prog(self):
         for j in range(2, 10):
             exec(f'self.currentmember.fig_{str(j)}['
-                 f'{"1" if self.flyui.radioButton_2.isChecked() else "2" if self.flyui.radioButton_3.isChecked() else "0"}]'
-                 f' = self.flyui.comboBox_{str(j)}.currentIndex()')
-            if self.flyui.radioButton.isChecked():
+                 f'{"1" if self.memberdata.fl_rb_2.isChecked() else "2" if self.memberdata.fl_rb_3.isChecked() else "0"}]'
+                 f' = self.memberdata.comboBox_{str(j)}.currentIndex()')
+            if self.memberdata.radioButton.isChecked():
                 exec(f'self.currentmember.fig_{str(j)}[1] = self.currentmember.fig_{str(j)}[0]')
                 exec(f'self.currentmember.fig_{str(j)}[2] = self.currentmember.fig_{str(j)}[0]')
+        self.memberdata.save_prog_btn.setEnabled(False)
 
     def set_info(self):
         row = self.table.currentIndex().row()
         number_index = self.model.index(row, 0)
         member_number = self.model.data(number_index, Qt.DisplayRole)
+        if self.memberdata.toss_box.value() > 0:
+            for m in Member.items:
+                if m.cls == self.memberclass and m.id == self.memberdata.toss_box.value() and m.number != member_number:
+                    self.error_('Участник с таким жребием уже зарегистрирован в этом классе')
+                    return
         for i in Member.items:
             if i.number == member_number and i.cls == self.memberclass:
-                for rows, j in enumerate(Member.items):
-                    if j.number != i.number and j.cls == i.cls and j.id == self.infoui.toss_box.value() and j.id > 0:
-                        self.error_('Участник с таким жребием уже зарегистрирован в этом классе!')
-                        self.get_info()
-                        return
-                i.surname = self.infoui.lineEdit_surname.text()
-                i.name = self.infoui.lineEdit_name.text()
-                i.region = self.infoui.lineEdit_region.text()
-                i.cls = self.infoui.label_cls.text()
-                i.prototype = self.infoui.lineEdit_prototype.text()
-                i.scale = self.infoui.scale_box.value()
-                i.speed = self.infoui.speed_box.value()
-                i.id = self.infoui.toss_box.value()
-                self.data[row][1] = self.infoui.lineEdit_surname.text()
-                self.data[row][2] = self.infoui.lineEdit_name.text()
-                self.data[row][3] = self.infoui.lineEdit_region.text()
-                self.data[row][4] = self.infoui.lineEdit_prototype.text()
-                self.data[row][11] = self.infoui.toss_box.value()
-
-    def gradelist_action(self, btn):
-        if btn.text() in ['OK', 'Apply', '&OK', '&Apply']:
-            self.set_grades()
+                i.surname = self.memberdata.lineEdit_surname.text()
+                i.name = self.memberdata.lineEdit_name.text()
+                i.region = self.memberdata.lineEdit_region.text()
+                i.cls = self.memberdata.label_cls.text()
+                i.prototype = self.memberdata.lineEdit_prototype.text()
+                i.scale = self.memberdata.scale_box.value()
+                i.speed = self.memberdata.speed_box.value()
+                i.id = self.memberdata.toss_box.value()
+                self.data[row][1] = self.memberdata.lineEdit_surname.text()
+                self.data[row][2] = self.memberdata.lineEdit_name.text()
+                self.data[row][3] = self.memberdata.lineEdit_region.text()
+                self.data[row][4] = self.memberdata.lineEdit_prototype.text()
+                self.data[row][11] = self.memberdata.toss_box.value()
+        self.memberdata.save_info_btn.setEnabled(False)
 
     def set_grades(self):
-        row = self.table.currentIndex().row()
-        for i in Member.items:
-            if i.id == self.data[row][11]:
-                self.currentmember = i
-
         for j in range(1, 14):
             for k in range(1, 4):
                 exec(f'self.currentmember.fly_grade_{str(j)}[{str(self.tourcount())}][{str(k - 1)}] = '
-                     f'self.gradelistui.sb_{str(k)}_{str(j)}.value()')
+                     f'self.memberdata.sb_{str(k)}_{str(j)}.value()')
 
-        self.filling(i.cls)
+        self.filling(self.currentmember.cls)
         self.grade_list()
 
     def timetable_preview(self):
-        data = []
+        table = self.timetable.tableView
+        tourindex = self.tourindex()
+        if self.memberclass == 'F-4C':
+            if tourindex == 0 and self.locate_data.f4c_tour_1 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4c_tour_1))
+            if tourindex == 1 and self.locate_data.f4c_tour_2 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4c_tour_2))
+            if tourindex == 2 and self.locate_data.f4c_tour_3 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4c_tour_3))
+        if self.memberclass == 'F-4C (Ю)':
+            if tourindex == 0 and self.locate_data.f4cu_tour_1 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4cu_tour_1))
+            if tourindex == 1 and self.locate_data.f4cu_tour_2 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4cu_tour_2))
+            if tourindex == 2 and self.locate_data.f4cu_tour_3 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4cu_tour_3))
+        if self.memberclass == 'F-4H':
+            if tourindex == 0 and self.locate_data.f4h_tour_1 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4h_tour_1))
+            if tourindex == 1 and self.locate_data.f4h_tour_2 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4h_tour_2))
+            if tourindex == 2 and self.locate_data.f4h_tour_3 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4h_tour_3))
+        if self.memberclass == 'F-4G':
+            if tourindex == 0 and self.locate_data.f4g_tour_1 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4g_tour_1))
+            if tourindex == 1 and self.locate_data.f4g_tour_2 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4g_tour_2))
+            if tourindex == 2 and self.locate_data.f4g_tour_3 != None:
+                self.timetable.dateTimeEdit.setDateTime(QDateTime(self.locate_data.f4g_tour_3))
+        timetable_model = self.set_timetable_1(tourindex) if tourindex == 0 else self.set_timetable_2(tourindex)\
+            if tourindex == 1 else self.set_timetable_3(tourindex)
+
+        table.setModel(timetable_model)
+        if tourindex == 0:
+            table.setSortingEnabled(False)
+            table.sortByColumn(5, Qt.AscendingOrder)
+        if tourindex == 2:
+            table.sortByColumn(8, Qt.AscendingOrder)
+        self.timetable.show()
+
+    def tourindex(self):
         for btn in self.r_buttons:
             if btn.isChecked():
                 index = btn.index
+        return index
+
+    def set_timetable_1(self, index):
+        data = []
         headers = timetable_headers[index]
         for member in Member.items:
             if member.cls == self.memberclass:
                 data.append([member.number, member.surname, member.name, member.region, member.prototype, member.id])
-        table = self.timetable.tableView
         timetable_in_model = TableModel(headers, data)
         timetable_model = QSortFilterProxyModel()
         timetable_model.setSourceModel(timetable_in_model)
-        table.setModel(timetable_model)
-        table.setSortingEnabled(True)
-        table.sortByColumn(5, Qt.AscendingOrder)
-        self.timetable.show()
+        return timetable_model
+
+    def set_timetable_2(self, index):
+        in_data = []
+        data = []
+        in_tosslist = []
+        tosslist = []
+        headers = timetable_headers[index]
+        source_data = self.dataclasses[self.memberclass]
+        if source_data == []:
+            self.error_('Нет данных для вывода!')
+            return
+        for row in source_data:
+            new_row = []
+            for col in range(7):
+                new_row.append(row[col])
+            result = row[5] + row[6]
+            new_row.append(result)
+            new_row.append(row[11])
+            in_tosslist.append(row[11])
+            in_data.append(new_row)
+        in_tosslist.sort()
+        start_number = round(max(in_tosslist) * 2 / 3)
+        for item in range(in_tosslist.index(start_number) + 1, len(in_tosslist)):
+            tosslist.append(in_tosslist[item])
+        for item in range(in_tosslist.index(start_number) + 1):
+            tosslist.append(in_tosslist[item])
+        for toss in tosslist:
+            for row in in_data:
+                if row[8] == toss:
+                    data.append(row)
+        timetable_in_model = TableModel(headers, data)
+        timetable_model = QSortFilterProxyModel()
+        timetable_model.setSourceModel(timetable_in_model)
+        return timetable_model
+
+    def set_timetable_3(self, index):
+        data = []
+        headers = timetable_headers[index]
+        source_data = self.dataclasses[self.memberclass]
+        if source_data == []:
+            self.error_('Нет данных для вывода!')
+            return
+        for row in source_data:
+            new_row = []
+            for col in range(8):
+                new_row.append(row[col])
+            result = row[5] + (row[6] + row[7]) / 2
+            new_row.append(result)
+            data.append(new_row)
+        timetable_in_model = TableModel(headers, data)
+        timetable_model = QSortFilterProxyModel()
+        timetable_model.setSourceModel(timetable_in_model)
+        return timetable_model
 
     def gradelist_request(self, printer):
         figure = {2: self.currentmember.fig_2, 3: self.currentmember.fig_3, 4: self.currentmember.fig_4,
@@ -1177,13 +1459,13 @@ class F4C(QMainWindow, Ui_MainWindow):
                          f'</table>' \
                          f'<table width="100%" border="0" bordercolor="ffffff" cellspacing="0" cellpadding="5">' \
                          f'<tr>' \
-                         f'<td><br><br><br>C1: {self.gradelistui.comboBox_9.currentText()}_______________</td>' \
+                         f'<td><br><br><br>C1: {self.memberdata.grade_ref_box_1.currentText()}_______________</td>' \
                          f'</tr>' \
                          f'<tr>' \
-                         f'<td><br><br>C2: {self.gradelistui.comboBox_10.currentText()}_______________</td>' \
+                         f'<td><br><br>C2: {self.memberdata.grade_ref_box_2.currentText()}_______________</td>' \
                          f'</tr>' \
                          f'<tr>' \
-                         f'<td><br><br>C3: {self.gradelistui.comboBox_11.currentText()}_______________</td>' \
+                         f'<td><br><br>C3: {self.memberdata.grade_ref_box_3.currentText()}_______________</td>' \
                          f'</tr>' \
                          f'</table>' \
                          f'</body>' \
@@ -1314,7 +1596,6 @@ class F4C(QMainWindow, Ui_MainWindow):
         begin_date = "{}".format(self.dateEdit.date().toString('dd.MM.yyyy'))
         end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
 
-        # program = ''
         default = ''
         total_1 = []
         total_2 = []
@@ -1566,20 +1847,20 @@ class F4C(QMainWindow, Ui_MainWindow):
                       f'<tr>' \
                       f'<td colspan="4" rowspan="2"><br><br>' \
                       f'Коэффициент статической оценки: {self.currentmember.static_k}<br>' \
-                      f'Итоговые очки: {sum(total_1) + sum(total_2) + sum(total_3)}</td>' \
+                      f'Итоговые очки: {round(sum(total_1) + sum(total_2) + sum(total_3), 1)}</td>' \
                       f'<td align="center"><font size="2">сумма:</font></td><td align="center">{sum(total_1)}</td>' \
-                      f'<td align="center"><font size="2">сумма:</font>:</td><td align="center">{sum(total_2)}</td>' \
-                      f'<td align="center"><font size="2">сумма:</font>:</td><td align="center">{sum(total_2)}</td>' \
+                      f'<td align="center"><font size="2">сумма:</font></td><td align="center">{sum(total_2)}</td>' \
+                      f'<td align="center"><font size="2">сумма:</font></td><td align="center">{sum(total_2)}</td>' \
                       f'</tr>' \
                       f'<tr>' \
                       f'<td align="center"><font size="2">судья:</font></td><td align="center">' \
-                      f'{self.statui.comboBox_1.currentText()}' \
+                      f'{self.memberdata.stend_ref_box_1.currentText()}' \
                       f'<br><br>_______________</td>' \
                       f'<td align="center"><font size="2">судья:</font></td><td align="center">' \
-                      f'{self.statui.comboBox_2.currentText()}' \
+                      f'{self.memberdata.stend_ref_box_2.currentText()}' \
                       f'<br><br>_______________</td>' \
                       f'<td align="center"><font size="2">судья:</font></td><td align="center">' \
-                      f'{self.statui.comboBox_3.currentText()}' \
+                      f'{self.memberdata.stend_ref_box_3.currentText()}' \
                       f'<br><br>_______________</td>' \
                       f'</tr>' \
                       f'</table>' \
@@ -1783,20 +2064,20 @@ class F4C(QMainWindow, Ui_MainWindow):
                       f'<tr>' \
                       f'<td colspan="4" rowspan="2"><br><br>' \
                       f'Бонус: {self.currentmember.bonus}<br>' \
-                      f'Итоговые очки: {sum(total_1) + sum(total_2) + sum(total_3) + self.currentmember.bonus}</td>' \
+                      f'Итоговые очки: {round(sum(total_1) + sum(total_2) + sum(total_3) + self.currentmember.bonus, 1)}</td>' \
                       f'<td align="center"><font size="2">сумма:</font></td><td align="center">{sum(total_1)}</td>' \
-                      f'<td align="center"><font size="2">сумма:</font>:</td><td align="center">{sum(total_2)}</td>' \
-                      f'<td align="center"><font size="2">сумма:</font>:</td><td align="center">{sum(total_2)}</td>' \
+                      f'<td align="center"><font size="2">сумма:</font></td><td align="center">{sum(total_2)}</td>' \
+                      f'<td align="center"><font size="2">сумма:</font></td><td align="center">{sum(total_2)}</td>' \
                       f'</tr>' \
                       f'<tr>' \
                       f'<td align="center"><font size="2">судья:</font></td><td align="center">' \
-                      f'{self.statui.comboBox_1.currentText()}' \
+                      f'{self.memberdata.stend_ref_box_1.currentText()}' \
                       f'<br><br>_______________</td>' \
                       f'<td align="center"><font size="2">судья:</font></td><td align="center">' \
-                      f'{self.statui.comboBox_2.currentText()}' \
+                      f'{self.memberdata.stend_ref_box_2.currentText()}' \
                       f'<br><br>_______________</td>' \
                       f'<td align="center"><font size="2">судья:</font></td><td align="center">' \
-                      f'{self.statui.comboBox_3.currentText()}' \
+                      f'{self.memberdata.stend_ref_box_3.currentText()}' \
                       f'<br><br>_______________</td>' \
                       f'</tr>' \
                       f'</table>' \
@@ -1814,25 +2095,20 @@ class F4C(QMainWindow, Ui_MainWindow):
         document.setHtml(static_page)
         document.print_(printer)
 
-    def static_action(self, btn):
-        if btn.text() in ['OK', 'Apply', '&OK', '&Apply']:
-            self.set_static()
-            self.calculate_static()
-
     def set_static(self):
         data_1 = []
         data_2 = []
         data_3 = []
         for j in range(13):
-            exec(f'data_1.append(self.statui.dsb_1_{str(j)}.value())')
-            exec(f'data_2.append(self.statui.dsb_2_{str(j)}.value())')
-            exec(f'data_3.append(self.statui.dsb_3_{str(j)}.value())')
+            exec(f'data_1.append(self.memberdata.dsb_1_{str(j)}.value())')
+            exec(f'data_2.append(self.memberdata.dsb_2_{str(j)}.value())')
+            exec(f'data_3.append(self.memberdata.dsb_3_{str(j)}.value())')
         self.currentmember.stat_grade_1 = data_1
         self.currentmember.stat_grade_2 = data_2
         self.currentmember.stat_grade_3 = data_3
-        self.currentmember.static_k = self.statui.dsb_k.value()
-        self.currentmember.bonus = self.statui.dsb_bonus.value()
-
+        self.currentmember.static_k = self.memberdata.dsb_k.value()
+        self.currentmember.bonus = self.memberdata.dsb_bonus.value()
+        self.calculate_static()
         self.filling(self.currentmember.cls)
 
     def calculate_static(self):
@@ -1845,7 +2121,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         correct_k = self.currentmember.static_k if self.memberclass == 'F-4G' else 1
         for k in range(13):
             item = '' if stat_k[k] == 0 else stat_k[k]
-            exec(f'self.statui.k_{str(k)}.setText(str({str(item)}))')
+            exec(f'self.memberdata.k_{str(k)}.setText(str({str(item)}))')
         sum_1 = 0
         sum_2 = 0
         sum_3 = 0
@@ -1861,42 +2137,21 @@ class F4C(QMainWindow, Ui_MainWindow):
             sum_2 = sum_2 + float(score_2)
             sum_3 = sum_3 + float(score_3)
 
-            exec(f'self.statui.dsb_1_{str(j)}.setValue(self.currentmember.stat_grade_1[{str(j)}])')
-            exec(f'self.statui.dsb_2_{str(j)}.setValue(self.currentmember.stat_grade_2[{str(j)}])')
-            exec(f'self.statui.dsb_3_{str(j)}.setValue(self.currentmember.stat_grade_3[{str(j)}])')
-            exec(f'self.statui.score_1_{str(j)}.setText(''score_1'')')
-            exec('self.statui.score_2_' + str(j) + '.setText(''score_2'')')
-            exec('self.statui.score_3_' + str(j) + '.setText(''score_3'')')
+            exec(f'self.memberdata.dsb_1_{str(j)}.setValue(self.currentmember.stat_grade_1[{str(j)}])')
+            exec(f'self.memberdata.dsb_2_{str(j)}.setValue(self.currentmember.stat_grade_2[{str(j)}])')
+            exec(f'self.memberdata.dsb_3_{str(j)}.setValue(self.currentmember.stat_grade_3[{str(j)}])')
+            exec(f'self.memberdata.score_1_{str(j)}.setText(''score_1'')')
+            exec('self.memberdata.score_2_' + str(j) + '.setText(''score_2'')')
+            exec('self.memberdata.score_3_' + str(j) + '.setText(''score_3'')')
 
         total = (sum_1 + sum_2 + sum_3) * correct_k + self.currentmember.bonus
-        self.statui.sum_1.setText(str(sum_1))
-        self.statui.sum_2.setText(str(sum_2))
-        self.statui.sum_3.setText(str(sum_3))
-        self.statui.total_score.setText(str(total))
+        self.memberdata.sum_1.setText(str(sum_1))
+        self.memberdata.sum_2.setText(str(sum_2))
+        self.memberdata.sum_3.setText(str(sum_3))
+        self.memberdata.total_score.setText(str(total))
 
-    def set_timetable(self, btn):
-        # if btn.isChecked():
-        return True, 'OK', btn.index
 
 class f4cWindow(QDialog, Ui_F4C_fill):
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-
-
-class flyWin(QDialog, Ui_FlyProg):
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-
-
-class Inform(QDialog, Ui_Info):
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-
-
-class Static(QDialog, Ui_Static):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -1920,17 +2175,15 @@ class FlyList(QDialog, Ui_Flylist):
         self.setupUi(self)
 
 
-class GradeList(QDialog, Ui_Gradelist):
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-
-
 class Timetable(QDialog, Ui_Timetable):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
+class Data(QDialog, Ui_Data):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
 
 class Referee:
     items = []
@@ -1997,6 +2250,18 @@ class Info:
         self.end_date = ''
         self.ekp_f4c = ''
         self.ekp_f4cu = ''
+        self.f4c_tour_1 = None
+        self.f4c_tour_2 = None
+        self.f4c_tour_3 = None
+        self.f4cu_tour_1 = None
+        self.f4cu_tour_2 = None
+        self.f4cu_tour_3 = None
+        self.f4h_tour_1 = None
+        self.f4h_tour_2 = None
+        self.f4h_tour_3 = None
+        self.f4g_tour_1 = None
+        self.f4g_tour_2 = None
+        self.f4g_tour_3 = None
         Info.items.append(self)
 
 
