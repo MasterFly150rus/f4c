@@ -1,7 +1,7 @@
 from F4_UI import Ui_MainWindow
 from F4C_fill_UI import Ui_F4C_fill
-from TourI_UI import Ui_TourI
-from TourII_UI import Ui_TourII
+from TourI import Ui_TourI
+from TourII import Ui_TourII
 from Flylist import Ui_Flylist
 from Timetable import Ui_Timetable
 from Data import Ui_Data
@@ -13,13 +13,12 @@ import sys
 import pickle
 from pathlib import Path
 
-headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'III тур', 'Результат',
-           'Место')
-tourI_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат', 'Место')
-tourII_headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат', 'Место')
-timetable_headers = {0: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Жеребьёвка'),
-                     1: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат',  'Жеребьёвка'),
-                     2: ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат')}
+headers = ('№', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'III тур', 'Результат', 'Место')
+tourI_headers = ('Место', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат')
+tourII_headers = ('Место', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат')
+timetable_headers = {0: ('Жеребьёвка', 'Фамилия', 'Имя', 'Регион', 'Прототип'),
+                     1: ('П. старта', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'Результат'),
+                     2: ('П. старта', 'Фамилия', 'Имя', 'Регион', 'Прототип', 'Стенд', 'I тур', 'II тур', 'Результат')}
 
 class F4C(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -78,6 +77,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.currentmember = None
         self.file = ''
         self.file_in = ''
+        self.saved_flag = False
         self.referee_fields = ((self.lineEdit_0_0, self.lineEdit_0_1, self.lineEdit_0_2),
                                (self.lineEdit_1_0, self.lineEdit_1_1, self.lineEdit_1_2),
                                (self.lineEdit_2_0, self.lineEdit_2_1, self.lineEdit_2_2),
@@ -134,38 +134,39 @@ class F4C(QMainWindow, Ui_MainWindow):
                                                                             else self.timetable_2_request
                                                                             if self.timetable.radioButton_2.isChecked()
                                                                             else self.timetable_3_request))
-        self.lineEdit_0_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_0_0.text(), 0))
-        self.lineEdit_1_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_1_0.text(), 1))
-        self.lineEdit_2_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_2_0.text(), 2))
-        self.lineEdit_3_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_3_0.text(), 3))
-        self.lineEdit_4_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_4_0.text(), 4))
-        self.lineEdit_5_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_5_0.text(), 5))
-        self.lineEdit_6_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_6_0.text(), 6))
-        self.lineEdit_7_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_7_0.text(), 7))
-        self.lineEdit_8_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_8_0.text(), 8))
-        self.lineEdit_9_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_9_0.text(), 9))
-
-        self.lineEdit_0_1.textChanged.connect(lambda: self.set_name(self.lineEdit_0_1.text(), 0))
-        self.lineEdit_1_1.textChanged.connect(lambda: self.set_name(self.lineEdit_1_1.text(), 1))
-        self.lineEdit_2_1.textChanged.connect(lambda: self.set_name(self.lineEdit_2_1.text(), 2))
-        self.lineEdit_3_1.textChanged.connect(lambda: self.set_name(self.lineEdit_3_1.text(), 3))
-        self.lineEdit_4_1.textChanged.connect(lambda: self.set_name(self.lineEdit_4_1.text(), 4))
-        self.lineEdit_5_1.textChanged.connect(lambda: self.set_name(self.lineEdit_5_1.text(), 5))
-        self.lineEdit_6_1.textChanged.connect(lambda: self.set_name(self.lineEdit_6_1.text(), 6))
-        self.lineEdit_7_1.textChanged.connect(lambda: self.set_name(self.lineEdit_7_1.text(), 7))
-        self.lineEdit_8_1.textChanged.connect(lambda: self.set_name(self.lineEdit_8_1.text(), 8))
-        self.lineEdit_9_1.textChanged.connect(lambda: self.set_name(self.lineEdit_9_1.text(), 9))
-
-        self.lineEdit_0_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_0_2.text(), 0))
-        self.lineEdit_1_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_1_2.text(), 1))
-        self.lineEdit_2_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_2_2.text(), 2))
-        self.lineEdit_3_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_3_2.text(), 3))
-        self.lineEdit_4_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_4_2.text(), 4))
-        self.lineEdit_5_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_5_2.text(), 5))
-        self.lineEdit_6_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_6_2.text(), 6))
-        self.lineEdit_7_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_7_2.text(), 7))
-        self.lineEdit_8_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_8_2.text(), 8))
-        self.lineEdit_9_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_9_2.text(), 9))
+        # self.lineEdit_0_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_0_0.text(), 0))
+        # self.lineEdit_1_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_1_0.text(), 1))
+        # self.lineEdit_2_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_2_0.text(), 2))
+        # self.lineEdit_3_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_3_0.text(), 3))
+        # self.lineEdit_4_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_4_0.text(), 4))
+        # self.lineEdit_5_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_5_0.text(), 5))
+        # self.lineEdit_6_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_6_0.text(), 6))
+        # self.lineEdit_7_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_7_0.text(), 7))
+        # self.lineEdit_8_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_8_0.text(), 8))
+        # self.lineEdit_9_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_9_0.text(), 9))
+        #
+        # self.lineEdit_0_1.textChanged.connect(lambda: self.set_name(self.lineEdit_0_1.text(), 0))
+        # self.lineEdit_1_1.textChanged.connect(lambda: self.set_name(self.lineEdit_1_1.text(), 1))
+        # self.lineEdit_2_1.textChanged.connect(lambda: self.set_name(self.lineEdit_2_1.text(), 2))
+        # self.lineEdit_3_1.textChanged.connect(lambda: self.set_name(self.lineEdit_3_1.text(), 3))
+        # self.lineEdit_4_1.textChanged.connect(lambda: self.set_name(self.lineEdit_4_1.text(), 4))
+        # self.lineEdit_5_1.textChanged.connect(lambda: self.set_name(self.lineEdit_5_1.text(), 5))
+        # self.lineEdit_6_1.textChanged.connect(lambda: self.set_name(self.lineEdit_6_1.text(), 6))
+        # self.lineEdit_7_1.textChanged.connect(lambda: self.set_name(self.lineEdit_7_1.text(), 7))
+        # self.lineEdit_8_1.textChanged.connect(lambda: self.set_name(self.lineEdit_8_1.text(), 8))
+        # self.lineEdit_9_1.textChanged.connect(lambda: self.set_name(self.lineEdit_9_1.text(), 9))
+        #
+        # self.lineEdit_0_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_0_2.text(), 0))
+        # self.lineEdit_1_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_1_2.text(), 1))
+        # self.lineEdit_2_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_2_2.text(), 2))
+        # self.lineEdit_3_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_3_2.text(), 3))
+        # self.lineEdit_4_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_4_2.text(), 4))
+        # self.lineEdit_5_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_5_2.text(), 5))
+        # self.lineEdit_6_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_6_2.text(), 6))
+        # self.lineEdit_7_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_7_2.text(), 7))
+        # self.lineEdit_8_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_8_2.text(), 8))
+        # self.lineEdit_9_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_9_2.text(), 9))
+        self.connect_general_fields()
         self.lineEdit_25.textChanged.connect(self.set_locate)
         self.lineEdit_26.textChanged.connect(self.set_ekp_f4c)
         self.lineEdit_27.textChanged.connect(self.set_ekp_f4cu)
@@ -225,7 +226,7 @@ class F4C(QMainWindow, Ui_MainWindow):
             table = self.classes[cls]
             table.setModel(self.models[cls])
             table.setSortingEnabled(True)
-            table.sortByColumn(10, Qt.AscendingOrder)
+            table.sortByColumn(0, Qt.AscendingOrder)
         self.data = None
         self.model = None
         if len(sys.argv) == 2:
@@ -235,6 +236,41 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.timetable.radioButton_2.index = 1
         self.timetable.radioButton_3.index = 2
         self.timetable.buttonGroup.buttonClicked.connect(self.timetable_preview)
+        self.connect_static_fields()
+
+    def connect_static_fields(self):
+        static_fields = (self.memberdata.dsb_1_0, self.memberdata.dsb_1_1, self.memberdata.dsb_1_2,
+                         self.memberdata.dsb_1_3, self.memberdata.dsb_1_4, self.memberdata.dsb_1_5,
+                         self.memberdata.dsb_1_6, self.memberdata.dsb_1_7, self.memberdata.dsb_1_8,
+                         self.memberdata.dsb_1_9, self.memberdata.dsb_1_10, self.memberdata.dsb_1_11,
+                         self.memberdata.dsb_1_12, self.memberdata.dsb_2_0, self.memberdata.dsb_2_1,
+                         self.memberdata.dsb_2_2, self.memberdata.dsb_2_3, self.memberdata.dsb_2_4,
+                         self.memberdata.dsb_2_5, self.memberdata.dsb_2_6, self.memberdata.dsb_2_7,
+                         self.memberdata.dsb_2_8, self.memberdata.dsb_2_9, self.memberdata.dsb_2_10,
+                         self.memberdata.dsb_2_11, self.memberdata.dsb_2_12, self.memberdata.dsb_3_0,
+                         self.memberdata.dsb_3_1, self.memberdata.dsb_3_2, self.memberdata.dsb_3_3,
+                         self.memberdata.dsb_3_4, self.memberdata.dsb_3_5, self.memberdata.dsb_3_6,
+                         self.memberdata.dsb_3_7, self.memberdata.dsb_3_8, self.memberdata.dsb_3_9,
+                         self.memberdata.dsb_3_10, self.memberdata.dsb_3_11, self.memberdata.dsb_3_12)
+        for field in static_fields:
+            field.valueChanged.connect(lambda: self.memberdata.save_static_btn.setEnabled(True))
+
+    def connect_general_fields(self):
+        group_1 = (self.lineEdit_0_0, self.lineEdit_1_0, self.lineEdit_2_0, self.lineEdit_3_0, self.lineEdit_4_0,
+                   self.lineEdit_5_0, self.lineEdit_6_0, self.lineEdit_7_0, self.lineEdit_8_0, self.lineEdit_9_0)
+        group_2 = (self.lineEdit_0_1, self.lineEdit_1_1, self.lineEdit_2_1, self.lineEdit_3_1, self.lineEdit_4_1,
+                   self.lineEdit_5_1, self.lineEdit_6_1, self.lineEdit_7_1, self.lineEdit_8_1, self.lineEdit_9_1)
+        group_3 = (self.lineEdit_0_2, self.lineEdit_1_2, self.lineEdit_2_2, self.lineEdit_3_2, self.lineEdit_4_2,
+                   self.lineEdit_5_2, self.lineEdit_6_2, self.lineEdit_7_2, self.lineEdit_8_2, self.lineEdit_9_2)
+        for count, field in enumerate(group_1):
+                field.textChanged.connect(lambda: self.set_surname(field.text(), count))
+                field.textChanged.connect(self.set_referees)
+        for count, field in enumerate(group_2):
+            field.textChanged.connect(lambda: self.set_name(field.text(), count))
+            field.textChanged.connect(self.set_referees)
+        for count, field in enumerate(group_3):
+            field.textChanged.connect(lambda: self.set_patronymic(field.text(), count))
+            field.textChanged.connect(self.set_referees)
 
     @staticmethod
     def show_about(self):
@@ -509,7 +545,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         res_list = []
         for row in source_data:
             new_row = []
-            for col in range(7):
+            for col in range(1, 7):
                 new_row.append(row[col])
             result = row[5] + row[6]
             new_row.append(result)
@@ -518,26 +554,26 @@ class F4C(QMainWindow, Ui_MainWindow):
         table = self.tour.tableView
         place_list = sorted(res_list, reverse=True)
         for l in data:
-            place = place_list.index(l[7]) + 1
-            l.append(place)
+            place = place_list.index(l[6]) + 1
+            l.insert(0, place)
         tourI_in_model = TableModel(tourI_headers, data)
         tourI_model = QSortFilterProxyModel()
         tourI_model.setSourceModel(tourI_in_model)
         table.setModel(tourI_model)
         table.setSortingEnabled(True)
-        table.sortByColumn(8, Qt.AscendingOrder)
+        table.sortByColumn(0, Qt.AscendingOrder)
 
         self.tour.show()
 
     def tour_2_out(self):
         source_data = self.dataclasses[self.memberclass]
         self.tournumber = 'II'
-        self.tour.setWindowTitle(f'{self.memberclass} ФАС России {self.tournumber} тур')
+        self.tourII.setWindowTitle(f'{self.memberclass} ФАС России {self.tournumber} тур')
         data = []
         res_list = []
         for row in source_data:
             new_row = []
-            for col in range(8):
+            for col in range(1, 8):
                 new_row.append(row[col])
             result = row[5] + (row[6] + row[7]) / 2
             new_row.append(result)
@@ -546,14 +582,14 @@ class F4C(QMainWindow, Ui_MainWindow):
         table = self.tourII.tableView
         place_list = sorted(res_list, reverse=True)
         for l in data:
-            place = place_list.index(l[8]) + 1
-            l.append(place)
+            place = place_list.index(l[7]) + 1
+            l.insert(0, place)
         tourII_in_model = TableModel(tourII_headers, data)
         tourII_model = QSortFilterProxyModel()
         tourII_model.setSourceModel(tourII_in_model)
         table.setModel(tourII_model)
         table.setSortingEnabled(True)
-        table.sortByColumn(9, Qt.AscendingOrder)
+        table.sortByColumn(0, Qt.AscendingOrder)
         self.tourII.show()
 
     def set_locate(self):
@@ -721,7 +757,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                 member_data = self.calculate(i)
                 results_list.append(member_data[4])
                 for row in self.data:
-                    if row[11] == i.id:
+                    if row[0] == i.number:
                         for column, item in enumerate(member_data, 5):
                             self.data[self.data.index(row)][column] = item
         place_list = sorted(results_list, reverse=True)
@@ -790,7 +826,7 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="7%">Место</td>' \
               f'<td align="center" width="19%">Фамилия</td>' \
               f'<td align="center" width="18%">Имя</td>' \
               f'<td align="center" width="19%">Регион</td>' \
@@ -798,7 +834,6 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'<td align="center" width="6%">Стенд</td>' \
               f'<td align="center" width="6%">I тур</td>' \
               f'<td align="center" width="6%">Рез.</td>' \
-              f'<td align="center" width="5%">Место</td>' \
               f'</tr>'
         for k in range(model.rowCount()):
             content = content + '<tr>'
@@ -854,7 +889,7 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="7%">Место</td>' \
               f'<td align="center" width="17%">Фамилия</td>' \
               f'<td align="center" width="17.5%">Имя</td>' \
               f'<td align="center" width="18%">Регион</td>' \
@@ -863,7 +898,6 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'<td align="center" width="5.5%">I тур</td>' \
               f'<td align="center" width="5.5%">II тур</td>' \
               f'<td align="center" width="6%">Рез.</td>' \
-              f'<td align="center" width="5%">Место</td>' \
               f'</tr>'
         for i in range(model.rowCount()):
             content = content + '<tr>'
@@ -921,7 +955,7 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="2%">№</td>' \
+              f'<td align="center" width="5%">Место</td>' \
               f'<td align="center" width="15%">Фамилия</td>' \
               f'<td align="center" width="14%">Имя</td>' \
               f'<td align="center" width="14%">Регион</td>' \
@@ -930,8 +964,7 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'<td align="center" width="7%">I тур</td>' \
               f'<td align="center" width="7%">II тур</td>' \
               f'<td align="center" width="7%">III тур</td>' \
-              f'<td align="center" width="7%">Рез.</td>' \
-              f'<td align="center" width="5%">Место</td>' \
+              f'<td align="center" width="9%">Результат</td>' \
               f'</tr>'
         for i in range(model.rowCount()):
             content = content + '<tr>'
@@ -993,12 +1026,11 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="2%">№</td>' \
-              f'<td align="center" width="22%">Фамилия</td>' \
-              f'<td align="center" width="21%">Имя</td>' \
-              f'<td align="center" width="21%">Регион</td>' \
-              f'<td align="center" width="21%">Прототип</td>' \
               f'<td align="center" width="12%">Жеребьевка</td>' \
+              f'<td align="center" width="22%">Фамилия</td>' \
+              f'<td align="center" width="22%">Имя</td>' \
+              f'<td align="center" width="22%">Регион</td>' \
+              f'<td align="center" width="22%">Прототип</td>' \
               f'</tr>'
 
         for i in range(model.rowCount()):
@@ -1048,15 +1080,14 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="2%">№</td>' \
-              f'<td align="center" width="16%">Фамилия</td>' \
-              f'<td align="center" width="15%">Имя</td>' \
-              f'<td align="center" width="15%">Регион</td>' \
-              f'<td align="center" width="16%">Прототип</td>' \
-              f'<td align="center" width="10%">Стенд</td>' \
-              f'<td align="center" width="10%">I тур</td>' \
-              f'<td align="center" width="10%">Результат</td>' \
-              f'<td align="center" width="6%">Жер.</td>' \
+              f'<td align="center" width="9%">П. старта</td>' \
+              f'<td align="center" width="13%">Фамилия</td>' \
+              f'<td align="center" width="13%">Имя</td>' \
+              f'<td align="center" width="13%">Регион</td>' \
+              f'<td align="center" width="13%">Прототип</td>' \
+              f'<td align="center" width="13%">Стенд</td>' \
+              f'<td align="center" width="13%">I тур</td>' \
+              f'<td align="center" width="13%">Результат</td>' \
               f'</tr>'
 
         for i in range(model.rowCount()):
@@ -1106,11 +1137,11 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'</table>' \
               f'<table width="100%" border="1" bordercolor="ffffff" cellspacing="0" cellpadding="3">' \
               f'<tr>' \
-              f'<td align="center" width="2%">№</td>' \
-              f'<td align="center" width="16%">Фамилия</td>' \
-              f'<td align="center" width="15%">Имя</td>' \
-              f'<td align="center" width="15%">Регион</td>' \
-              f'<td align="center" width="16%">Прототип</td>' \
+              f'<td align="center" width="9%">П. старта</td>' \
+              f'<td align="center" width="14%">Фамилия</td>' \
+              f'<td align="center" width="13%">Имя</td>' \
+              f'<td align="center" width="13%">Регион</td>' \
+              f'<td align="center" width="15%">Прототип</td>' \
               f'<td align="center" width="10%">Стенд</td>' \
               f'<td align="center" width="10%">I тур</td>' \
               f'<td align="center" width="10%">II тур</td>' \
@@ -1268,7 +1299,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         table.setModel(timetable_model)
         if tourindex == 0:
             table.setSortingEnabled(False)
-            table.sortByColumn(5, Qt.AscendingOrder)
+            table.sortByColumn(0, Qt.AscendingOrder)
         if tourindex == 2:
             table.sortByColumn(8, Qt.AscendingOrder)
         self.timetable.show()
@@ -1284,7 +1315,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         headers = timetable_headers[index]
         for member in Member.items:
             if member.cls == self.memberclass:
-                data.append([member.number, member.surname, member.name, member.region, member.prototype, member.id])
+                data.append([member.id, member.surname, member.name, member.region, member.prototype])
         timetable_in_model = TableModel(headers, data)
         timetable_model = QSortFilterProxyModel()
         timetable_model.setSourceModel(timetable_in_model)
@@ -1302,11 +1333,11 @@ class F4C(QMainWindow, Ui_MainWindow):
             return
         for row in source_data:
             new_row = []
-            for col in range(7):
+            new_row.append(row[11])
+            for col in range(1, 7):
                 new_row.append(row[col])
             result = row[5] + row[6]
             new_row.append(result)
-            new_row.append(row[11])
             in_tosslist.append(row[11])
             in_data.append(new_row)
         in_tosslist.sort()
@@ -1315,10 +1346,16 @@ class F4C(QMainWindow, Ui_MainWindow):
             tosslist.append(in_tosslist[item])
         for item in range(in_tosslist.index(start_number) + 1):
             tosslist.append(in_tosslist[item])
-        for toss in tosslist:
+        for num, toss in enumerate(tosslist):
             for row in in_data:
-                if row[8] == toss:
-                    data.append(row)
+                if row[0] == toss:
+                    tmp_row = []
+                    tmp_row.append(num + 1)
+                    for i, item in enumerate(row):
+                        if i == 0:
+                            continue
+                        tmp_row.append(item)
+                    data.append(tmp_row)
         timetable_in_model = TableModel(headers, data)
         timetable_model = QSortFilterProxyModel()
         timetable_model.setSourceModel(timetable_in_model)
@@ -1326,6 +1363,7 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def set_timetable_3(self, index):
         data = []
+        res_list = []
         headers = timetable_headers[index]
         source_data = self.dataclasses[self.memberclass]
         if source_data == []:
@@ -1333,11 +1371,16 @@ class F4C(QMainWindow, Ui_MainWindow):
             return
         for row in source_data:
             new_row = []
-            for col in range(8):
+            for col in range(1, 8):
                 new_row.append(row[col])
             result = row[5] + (row[6] + row[7]) / 2
             new_row.append(result)
+            res_list.append(result)
             data.append(new_row)
+        res_list.sort()
+        for l in data:
+            place = res_list.index(l[7]) + 1
+            l.insert(0, place)
         timetable_in_model = TableModel(headers, data)
         timetable_model = QSortFilterProxyModel()
         timetable_model.setSourceModel(timetable_in_model)
@@ -2110,6 +2153,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.currentmember.bonus = self.memberdata.dsb_bonus.value()
         self.calculate_static()
         self.filling(self.currentmember.cls)
+        self.memberdata.save_static_btn.setEnabled(False)
 
     def calculate_static(self):
         if self.memberclass == 'F-4H':
