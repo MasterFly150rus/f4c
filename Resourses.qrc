@@ -16,5 +16,6 @@
         <file>Tools_ico/2_tour.png</file>
         <file>Tools_ico/3_tour.png</file>
         <file>Tools_ico/Print.png</file>
+        <file>Tools_ico/New.png</file>
     </qresource>
 </RCC>

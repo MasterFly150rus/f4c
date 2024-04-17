@@ -169,7 +169,7 @@
                     <hour>0</hour>
                     <minute>0</minute>
                     <second>0</second>
-                    <year>2022</year>
+                    <year>2024</year>
                     <month>7</month>
                     <day>1</day>
                    </datetime>
@@ -196,7 +196,7 @@
                     <hour>0</hour>
                     <minute>0</minute>
                     <second>0</second>
-                    <year>2022</year>
+                    <year>2024</year>
                     <month>7</month>
                     <day>1</day>
                    </datetime>
@@ -1375,6 +1375,7 @@
     <property name="title">
      <string>Файл</string>
     </property>
+    <addaction name="new_action"/>
     <addaction name="action_2"/>
     <addaction name="action"/>
     <addaction name="action_3"/>
@@ -1422,6 +1423,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="new_action"/>
    <addaction name="action_2"/>
    <addaction name="action"/>
    <addaction name="action_3"/>
@@ -1437,12 +1439,18 @@
    <addaction name="result_action"/>
   </widget>
   <action name="action">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="Resourses.qrc">
      <normaloff>:/images/Tools_ico/Save.png</normaloff>:/images/Tools_ico/Save.png</iconset>
    </property>
    <property name="text">
     <string>Сохранить</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="action_2">
@@ -1453,6 +1461,9 @@
    <property name="text">
     <string>Открыть</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="action_3">
    <property name="icon">
@@ -1461,6 +1472,9 @@
    </property>
    <property name="text">
     <string>Сохранить как...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
    </property>
   </action>
   <action name="add_action">
@@ -1571,6 +1585,21 @@
   <action name="about_action">
    <property name="text">
     <string>О программе</string>
+   </property>
+  </action>
+  <action name="new_action">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="Resourses.qrc">
+     <normaloff>:/images/Tools_ico/New.png</normaloff>:/images/Tools_ico/New.png</iconset>
+   </property>
+   <property name="text">
+    <string>Новый файл</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>

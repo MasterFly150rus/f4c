@@ -27,16 +27,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.buttons = (self.add_action, self.delete_action, self.info_action, self.line_action, self.tour_I_action,
                         self.tour_II_action, self.result_action)
         self.locate_data = Info()
-        self.referee_1 = Referee()
-        self.referee_2 = Referee()
-        self.referee_3 = Referee()
-        self.referee_4 = Referee()
-        self.referee_5 = Referee()
-        self.referee_6 = Referee()
-        self.referee_7 = Referee()
-        self.referee_8 = Referee()
-        self.referee_9 = Referee()
-        self.referee_10 = Referee()
+        self.referees()
         self.memberdata = Data()
         self.f4cui = f4cWindow()
         self.tour = TourI()
@@ -94,29 +85,14 @@ class F4C(QMainWindow, Ui_MainWindow):
                                    self.memberdata.dsb_1_10, self.memberdata.dsb_2_10, self.memberdata.dsb_3_10,
                                    self.memberdata.dsb_1_11, self.memberdata.dsb_2_11, self.memberdata.dsb_3_11,
                                    self.memberdata.dsb_1_12, self.memberdata.dsb_2_12, self.memberdata.dsb_3_12)
-        self.info_lineedits = (self.memberdata.lineEdit_surname, self.memberdata.lineEdit_name,
-                            self.memberdata.lineEdit_region, self.memberdata.lineEdit_prototype)
-        self.info_boxes = (self.memberdata.scale_box, self.memberdata.speed_box, self.memberdata.toss_box)
-        self.prog_combo = (self.memberdata.comboBox_2, self.memberdata.comboBox_3, self.memberdata.comboBox_4,
-                           self.memberdata.comboBox_5, self.memberdata.comboBox_6, self.memberdata.comboBox_7,
-                           self.memberdata.comboBox_8, self.memberdata.comboBox_9)
-        self.prog_buttons = (self.memberdata.radioButton, self.memberdata.fl_rb_1, self.memberdata.fl_rb_2,
-                             self.memberdata.fl_rb_3)
         for cls in self.classes:
             self.f4cui.cls_box.addItem(cls)
-        for lineedit in self.info_lineedits:
-            lineedit.textChanged.connect(lambda: self.set_enable(self.memberdata.save_info_btn))
-        for box in self.info_boxes:
-            box.valueChanged.connect(lambda: self.set_enable(self.memberdata.save_info_btn))
-        for combo in self.prog_combo:
-            combo.currentIndexChanged.connect(lambda: self.set_enable(self.memberdata.save_prog_btn))
-        for flrb in self.prog_buttons:
-            flrb.clicked.connect(lambda: self.set_enable(self.memberdata.save_prog_btn))
         self.f4cui.cls_box.currentIndexChanged.connect(lambda: self.change_tab(self.f4cui.cls_box.currentIndex() + 1))
         self.f4cui.cls_box.currentIndexChanged.connect(lambda: self.tabWidget.setCurrentIndex(self.f4cui.cls_box.currentIndex() + 1))
-        self.set_start_date()
-        self.set_end_date()
+        # self.set_start_date()
+        # self.set_end_date()
         self.add_action.triggered.connect(self.get_data)
+        self.new_action.triggered.connect(self.new_file)
         self.delete_action.triggered.connect(self.qwestion)
         self.info_action.triggered.connect(self.data_filling)
         self.tour_I_action.triggered.connect(self.tour_1_out)
@@ -134,39 +110,6 @@ class F4C(QMainWindow, Ui_MainWindow):
                                                                             else self.timetable_2_request
                                                                             if self.timetable.radioButton_2.isChecked()
                                                                             else self.timetable_3_request))
-        # self.lineEdit_0_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_0_0.text(), 0))
-        # self.lineEdit_1_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_1_0.text(), 1))
-        # self.lineEdit_2_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_2_0.text(), 2))
-        # self.lineEdit_3_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_3_0.text(), 3))
-        # self.lineEdit_4_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_4_0.text(), 4))
-        # self.lineEdit_5_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_5_0.text(), 5))
-        # self.lineEdit_6_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_6_0.text(), 6))
-        # self.lineEdit_7_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_7_0.text(), 7))
-        # self.lineEdit_8_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_8_0.text(), 8))
-        # self.lineEdit_9_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_9_0.text(), 9))
-        #
-        # self.lineEdit_0_1.textChanged.connect(lambda: self.set_name(self.lineEdit_0_1.text(), 0))
-        # self.lineEdit_1_1.textChanged.connect(lambda: self.set_name(self.lineEdit_1_1.text(), 1))
-        # self.lineEdit_2_1.textChanged.connect(lambda: self.set_name(self.lineEdit_2_1.text(), 2))
-        # self.lineEdit_3_1.textChanged.connect(lambda: self.set_name(self.lineEdit_3_1.text(), 3))
-        # self.lineEdit_4_1.textChanged.connect(lambda: self.set_name(self.lineEdit_4_1.text(), 4))
-        # self.lineEdit_5_1.textChanged.connect(lambda: self.set_name(self.lineEdit_5_1.text(), 5))
-        # self.lineEdit_6_1.textChanged.connect(lambda: self.set_name(self.lineEdit_6_1.text(), 6))
-        # self.lineEdit_7_1.textChanged.connect(lambda: self.set_name(self.lineEdit_7_1.text(), 7))
-        # self.lineEdit_8_1.textChanged.connect(lambda: self.set_name(self.lineEdit_8_1.text(), 8))
-        # self.lineEdit_9_1.textChanged.connect(lambda: self.set_name(self.lineEdit_9_1.text(), 9))
-        #
-        # self.lineEdit_0_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_0_2.text(), 0))
-        # self.lineEdit_1_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_1_2.text(), 1))
-        # self.lineEdit_2_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_2_2.text(), 2))
-        # self.lineEdit_3_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_3_2.text(), 3))
-        # self.lineEdit_4_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_4_2.text(), 4))
-        # self.lineEdit_5_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_5_2.text(), 5))
-        # self.lineEdit_6_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_6_2.text(), 6))
-        # self.lineEdit_7_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_7_2.text(), 7))
-        # self.lineEdit_8_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_8_2.text(), 8))
-        # self.lineEdit_9_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_9_2.text(), 9))
-        self.connect_general_fields()
         self.lineEdit_25.textChanged.connect(self.set_locate)
         self.lineEdit_26.textChanged.connect(self.set_ekp_f4c)
         self.lineEdit_27.textChanged.connect(self.set_ekp_f4cu)
@@ -184,10 +127,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberdata.fl_rb_2.clicked.connect(self.get_prog)
         self.memberdata.fl_rb_3.clicked.connect(self.get_prog)
         self.memberdata.flylist_btn.clicked.connect(self.fly_list)
-        self.memberdata.save_info_btn.clicked.connect(self.set_info)
-        self.memberdata.save_prog_btn.clicked.connect(self.set_prog)
         self.memberdata.print_grades_btn.clicked.connect(lambda: self.handlePreview(self.gradelist_request))
-        self.memberdata.save_grades_btn.clicked.connect(self.set_grades)
         self.memberdata.gl_rb_1.clicked.connect(self.grade_list)
         self.memberdata.gl_rb_2.clicked.connect(self.grade_list)
         self.memberdata.gl_rb_3.clicked.connect(self.grade_list)
@@ -195,7 +135,6 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberdata.print_static_btn.clicked.connect(lambda: self.handlePreview(self.static_f4h_request
                                                                           if self.memberclass == 'F-4H'
                                                                           else self.static_request))
-        self.memberdata.save_static_btn.clicked.connect(self.set_static)
         self.f4c_data =[]
         self.f4cu_data = []
         self.f4h_data = []
@@ -226,19 +165,65 @@ class F4C(QMainWindow, Ui_MainWindow):
             table = self.classes[cls]
             table.setModel(self.models[cls])
             table.setSortingEnabled(True)
-            table.sortByColumn(0, Qt.AscendingOrder)
+            table.sortByColumn(10, Qt.AscendingOrder)
         self.data = None
         self.model = None
         if len(sys.argv) == 2:
             self.file_in = sys.argv[1]
+            self.file = sys.argv[1]
             self.open_file()
         self.timetable.radioButton.index = 0
         self.timetable.radioButton_2.index = 1
         self.timetable.radioButton_3.index = 2
         self.timetable.buttonGroup.buttonClicked.connect(self.timetable_preview)
+        self.connect_info_fields()
+        self.connect_prog_fields()
+        self.connect_grades_fields()
         self.connect_static_fields()
+        self.connect_general_fields()
+
+    def connect_info_fields(self):
+        self.memberdata.save_info_btn.clicked.connect(self.set_info)
+        info_lineedits = (self.memberdata.lineEdit_surname, self.memberdata.lineEdit_name,
+                            self.memberdata.lineEdit_region, self.memberdata.lineEdit_prototype)
+        info_boxes = (self.memberdata.scale_box, self.memberdata.speed_box, self.memberdata.toss_box)
+        for lineedit in info_lineedits:
+            lineedit.textChanged.connect(lambda: self.set_enable(self.memberdata.save_info_btn))
+        for box in info_boxes:
+            box.valueChanged.connect(lambda: self.set_enable(self.memberdata.save_info_btn))
+
+    def connect_prog_fields(self):
+        self.memberdata.save_prog_btn.clicked.connect(self.set_prog)
+        prog_combo = (self.memberdata.comboBox_2, self.memberdata.comboBox_3, self.memberdata.comboBox_4,
+                           self.memberdata.comboBox_5, self.memberdata.comboBox_6, self.memberdata.comboBox_7,
+                           self.memberdata.comboBox_8, self.memberdata.comboBox_9)
+        prog_buttons = (self.memberdata.radioButton, self.memberdata.fl_rb_1, self.memberdata.fl_rb_2,
+                             self.memberdata.fl_rb_3)
+        for combo in prog_combo:
+            combo.currentIndexChanged.connect(lambda: self.set_enable(self.memberdata.save_prog_btn))
+        for flrb in prog_buttons:
+            flrb.clicked.connect(lambda: self.set_enable(self.memberdata.save_prog_btn))
+
+    def connect_grades_fields(self):
+        self.memberdata.save_grades_btn.clicked.connect(self.set_grades)
+        fields = (self.memberdata.sb_1_1, self.memberdata.sb_1_2, self.memberdata.sb_1_3,
+                  self.memberdata.sb_1_4, self.memberdata.sb_1_5, self.memberdata.sb_1_6,
+                  self.memberdata.sb_1_7, self.memberdata.sb_1_8, self.memberdata.sb_1_9,
+                  self.memberdata.sb_1_10, self.memberdata.sb_1_11, self.memberdata.sb_1_12,
+                  self.memberdata.sb_2_13, self.memberdata.sb_2_1, self.memberdata.sb_2_2,
+                  self.memberdata.sb_2_3, self.memberdata.sb_2_4, self.memberdata.sb_2_5,
+                  self.memberdata.sb_2_6, self.memberdata.sb_2_7, self.memberdata.sb_2_8,
+                  self.memberdata.sb_2_9, self.memberdata.sb_2_10, self.memberdata.sb_2_11,
+                  self.memberdata.sb_2_12, self.memberdata.sb_2_13, self.memberdata.sb_3_1,
+                  self.memberdata.sb_3_2, self.memberdata.sb_3_3, self.memberdata.sb_3_4,
+                  self.memberdata.sb_3_5, self.memberdata.sb_3_6, self.memberdata.sb_3_7,
+                  self.memberdata.sb_3_8, self.memberdata.sb_3_9, self.memberdata.sb_3_10,
+                  self.memberdata.sb_3_11, self.memberdata.sb_3_12, self.memberdata.sb_3_13)
+        for field in fields:
+            field.valueChanged.connect(lambda: self.memberdata.save_grades_btn.setEnabled(True))
 
     def connect_static_fields(self):
+        self.memberdata.save_static_btn.clicked.connect(self.set_static)
         static_fields = (self.memberdata.dsb_1_0, self.memberdata.dsb_1_1, self.memberdata.dsb_1_2,
                          self.memberdata.dsb_1_3, self.memberdata.dsb_1_4, self.memberdata.dsb_1_5,
                          self.memberdata.dsb_1_6, self.memberdata.dsb_1_7, self.memberdata.dsb_1_8,
@@ -256,21 +241,99 @@ class F4C(QMainWindow, Ui_MainWindow):
             field.valueChanged.connect(lambda: self.memberdata.save_static_btn.setEnabled(True))
 
     def connect_general_fields(self):
-        group_1 = (self.lineEdit_0_0, self.lineEdit_1_0, self.lineEdit_2_0, self.lineEdit_3_0, self.lineEdit_4_0,
+        self.group_1 = (self.lineEdit_0_0, self.lineEdit_1_0, self.lineEdit_2_0, self.lineEdit_3_0, self.lineEdit_4_0,
                    self.lineEdit_5_0, self.lineEdit_6_0, self.lineEdit_7_0, self.lineEdit_8_0, self.lineEdit_9_0)
-        group_2 = (self.lineEdit_0_1, self.lineEdit_1_1, self.lineEdit_2_1, self.lineEdit_3_1, self.lineEdit_4_1,
+        self.group_2 = (self.lineEdit_0_1, self.lineEdit_1_1, self.lineEdit_2_1, self.lineEdit_3_1, self.lineEdit_4_1,
                    self.lineEdit_5_1, self.lineEdit_6_1, self.lineEdit_7_1, self.lineEdit_8_1, self.lineEdit_9_1)
-        group_3 = (self.lineEdit_0_2, self.lineEdit_1_2, self.lineEdit_2_2, self.lineEdit_3_2, self.lineEdit_4_2,
+        self.group_3 = (self.lineEdit_0_2, self.lineEdit_1_2, self.lineEdit_2_2, self.lineEdit_3_2, self.lineEdit_4_2,
                    self.lineEdit_5_2, self.lineEdit_6_2, self.lineEdit_7_2, self.lineEdit_8_2, self.lineEdit_9_2)
-        for count, field in enumerate(group_1):
-                field.textChanged.connect(lambda: self.set_surname(field.text(), count))
-                field.textChanged.connect(self.set_referees)
-        for count, field in enumerate(group_2):
-            field.textChanged.connect(lambda: self.set_name(field.text(), count))
-            field.textChanged.connect(self.set_referees)
-        for count, field in enumerate(group_3):
-            field.textChanged.connect(lambda: self.set_patronymic(field.text(), count))
-            field.textChanged.connect(self.set_referees)
+        self.group_4 = (self.lineEdit_25, self.lineEdit_26, self.lineEdit_27)
+        for count, field in enumerate(self.group_1):
+            field.textChanged.connect(self.set_referee_boxes)
+        for count, field in enumerate(self.group_2):
+            field.textChanged.connect(self.set_referee_boxes)
+        for count, field in enumerate(self.group_3):
+            field.textChanged.connect(self.set_referee_boxes)
+        self.lineEdit_0_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_0_0.text(), 0))
+        self.lineEdit_1_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_1_0.text(), 1))
+        self.lineEdit_2_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_2_0.text(), 2))
+        self.lineEdit_3_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_3_0.text(), 3))
+        self.lineEdit_4_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_4_0.text(), 4))
+        self.lineEdit_5_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_5_0.text(), 5))
+        self.lineEdit_6_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_6_0.text(), 6))
+        self.lineEdit_7_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_7_0.text(), 7))
+        self.lineEdit_8_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_8_0.text(), 8))
+        self.lineEdit_9_0.textChanged.connect(lambda: self.set_surname(self.lineEdit_9_0.text(), 9))
+
+        self.lineEdit_0_1.textChanged.connect(lambda: self.set_name(self.lineEdit_0_1.text(), 0))
+        self.lineEdit_1_1.textChanged.connect(lambda: self.set_name(self.lineEdit_1_1.text(), 1))
+        self.lineEdit_2_1.textChanged.connect(lambda: self.set_name(self.lineEdit_2_1.text(), 2))
+        self.lineEdit_3_1.textChanged.connect(lambda: self.set_name(self.lineEdit_3_1.text(), 3))
+        self.lineEdit_4_1.textChanged.connect(lambda: self.set_name(self.lineEdit_4_1.text(), 4))
+        self.lineEdit_5_1.textChanged.connect(lambda: self.set_name(self.lineEdit_5_1.text(), 5))
+        self.lineEdit_6_1.textChanged.connect(lambda: self.set_name(self.lineEdit_6_1.text(), 6))
+        self.lineEdit_7_1.textChanged.connect(lambda: self.set_name(self.lineEdit_7_1.text(), 7))
+        self.lineEdit_8_1.textChanged.connect(lambda: self.set_name(self.lineEdit_8_1.text(), 8))
+        self.lineEdit_9_1.textChanged.connect(lambda: self.set_name(self.lineEdit_9_1.text(), 9))
+
+        self.lineEdit_0_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_0_2.text(), 0))
+        self.lineEdit_1_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_1_2.text(), 1))
+        self.lineEdit_2_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_2_2.text(), 2))
+        self.lineEdit_3_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_3_2.text(), 3))
+        self.lineEdit_4_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_4_2.text(), 4))
+        self.lineEdit_5_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_5_2.text(), 5))
+        self.lineEdit_6_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_6_2.text(), 6))
+        self.lineEdit_7_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_7_2.text(), 7))
+        self.lineEdit_8_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_8_2.text(), 8))
+        self.lineEdit_9_2.textChanged.connect(lambda: self.set_patronymic(self.lineEdit_9_2.text(), 9))
+
+    def referees(self):
+        self.referee_1 = Referee()
+        self.referee_2 = Referee()
+        self.referee_3 = Referee()
+        self.referee_4 = Referee()
+        self.referee_5 = Referee()
+        self.referee_6 = Referee()
+        self.referee_7 = Referee()
+        self.referee_8 = Referee()
+        self.referee_9 = Referee()
+        self.referee_10 = Referee()
+
+    def new_file(self):
+        if self.saved_flag:
+            self.save_qwestion()
+        else:
+            self.clear_all()
+            self.referees()
+            self.clear_fields()
+            self.new_action.setEnabled(False)
+
+    def save_qwestion(self):
+        qwest = QMessageBox()
+        qwest.setWindowTitle("ФАСР")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        qwest.setWindowIcon(icon)
+        qwest.setText("Сохранить изменения?")
+        qwest.setIcon(QMessageBox.Question)
+        qwest.setStandardButtons(QMessageBox.Ok | QMessageBox.No | QMessageBox.Cancel)
+        qwest.buttonClicked.connect(self.save_qwestion_action)
+        qwest.exec_()
+
+    def save_qwestion_action(self, btn):
+        if btn.text() in ['OK', '&OK']:
+            self.save_()
+            self.clear_all()
+            self.referees()
+            self.clear_fields()
+            self.new_action.setEnabled(False)
+        if btn.text() in ['No', '&No']:
+            self.clear_all()
+            self.referees()
+            self.clear_fields()
+            self.new_action.setEnabled(False)
+            self.action.setEnabled(False)
+            self.saved_flag = False
 
     @staticmethod
     def show_about(self):
@@ -345,6 +408,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                     if k[0] == member_number:
                         del data[j]
                         model.setItems(data)
+        self.commit_changes()
 
     def get_data(self):
         self.prepare_fields()
@@ -405,12 +469,15 @@ class F4C(QMainWindow, Ui_MainWindow):
         data.append([globals()[a].number, globals()[a].surname, globals()[a].name, globals()[a].region,
                     globals()[a].prototype, None, None, None, None, None, None, globals()[a].id])
         model.setItems(data)
+        self.commit_changes()
 
     def set_start_date(self):
         self.locate_data.start_date = self.dateEdit.date()
+        self.commit_changes()
 
     def set_end_date(self):
         self.locate_data.end_date = self.dateEdit_2.date()
+        self.commit_changes()
 
     def set_tourtime(self):
         tourindex = self.tourindex()
@@ -442,6 +509,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.locate_data.f4g_tour_2 = self.timetable.dateTimeEdit.dateTime()
             if tourindex == 2:
                 self.locate_data.f4g_tour_3 = self.timetable.dateTimeEdit.dateTime()
+        self.commit_changes()
 
     def data_filling(self):
         row = self.table.currentIndex().row()
@@ -594,20 +662,27 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def set_locate(self):
         self.locate_data.locate = self.lineEdit_25.text()
+        self.commit_changes()
 
     def set_ekp_f4c(self):
         self.locate_data.ekp_f4c = self.lineEdit_26.text()
+        self.commit_changes()
 
     def set_ekp_f4cu(self):
         self.locate_data.ekp_f4cu = self.lineEdit_27.text()
+        self.commit_changes()
 
     def save_(self):
         if self.file == "":
             self.save_as()
         else:
             self.write()
+        self.action.setEnabled(False)
+        self.saved_flag = False
 
     def filein(self):
+        if self.saved_flag:
+            self.save_qwestion()
         dialog = QWidget()
         dialog.setWindowTitle("Выберите файл")
         icon = QtGui.QIcon()
@@ -619,6 +694,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         filename, _ = QFileDialog.getOpenFileName(dialog, "Выберите файл", "", "Файл данных (*.f4c)", options=options)
         if filename:
             self.file_in = filename
+            self.file = filename
             self.open_file()
 
     def change_tab(self, index):
@@ -651,6 +727,8 @@ class F4C(QMainWindow, Ui_MainWindow):
         if fileName:
             self.file = fileName
             self.write()
+            self.saved_flag = False
+            self.action.setEnabled(False)
 
         dialog.show()
 
@@ -688,6 +766,26 @@ class F4C(QMainWindow, Ui_MainWindow):
         for cls in self.dataclasses:
             self.dataclasses[cls].clear()
 
+    def clear_fields(self):
+        groups = (self.group_1, self.group_2, self.group_3, self.group_4)
+        for group in groups:
+            for field in group:
+                field.clear()
+        self.dateEdit.setDate(QDate(2024, 7, 1))
+        self.dateEdit_2.setDate(QDate(2024, 7, 1))
+        self.locate_data.f4c_tour_1 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4c_tour_2 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4c_tour_3 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4cu_tour_1 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4cu_tour_2 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4cu_tour_3 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4h_tour_1 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4h_tour_2 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4h_tour_3 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4g_tour_1 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4g_tour_2 = QDateTime(2024, 7, 1, 0, 0)
+        self.locate_data.f4g_tour_3 = QDateTime(2024, 7, 1, 0, 0)
+
     def set_open(self):
         idlist = []
         for cls in self.classes:
@@ -699,8 +797,19 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.set_referees()
         self.set_data()
         self.change_tab(self.tabWidget.currentIndex())
+        self.action.setEnabled(False)
+        self.saved_flag = False
 
     def set_referees(self):
+        self.set_referee_boxes()
+
+        for ref_count, ref_field in enumerate(self.referee_fields):
+            current_referee = Referee.items[ref_count]
+            ref_field[0].setText(current_referee.surname)
+            ref_field[1].setText(current_referee.name)
+            ref_field[2].setText(current_referee.patronymic)
+
+    def set_referee_boxes(self):
         grade_referee_box = (self.memberdata.grade_ref_box_1, self.memberdata.grade_ref_box_2,
                              self.memberdata.grade_ref_box_3)
         stat_referee_box = (self.memberdata.stend_ref_box_1, self.memberdata.stend_ref_box_2,
@@ -726,12 +835,6 @@ class F4C(QMainWindow, Ui_MainWindow):
             self.flylistui.comboBox_1.addItem(item)
         self.flylistui.comboBox_1.setCurrentIndex(0)
 
-        for ref_count, ref_field in enumerate(self.referee_fields):
-            current_referee = Referee.items[ref_count]
-            ref_field[0].setText(current_referee.surname)
-            ref_field[1].setText(current_referee.name)
-            ref_field[2].setText(current_referee.patronymic)
-
     def set_data(self):
         self.lineEdit_25.setText(self.locate_data.locate)
         self.lineEdit_26.setText(self.locate_data.ekp_f4c)
@@ -741,12 +844,15 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def set_surname(self, surname, num):
         Referee.items[num].surname = surname
+        self.commit_changes()
 
     def set_name(self, name, num):
         Referee.items[num].name = name
+        self.commit_changes()
 
     def set_patronymic(self, patronymic, num):
         Referee.items[num].patronymic = patronymic
+        self.commit_changes()
 
     def filling(self, cls):
         self.data = self.dataclasses[cls]
@@ -797,6 +903,9 @@ class F4C(QMainWindow, Ui_MainWindow):
 
     def handlePreview(self, target):
         dialog = QtPrintSupport.QPrintPreviewDialog()
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/Ico/logo_301.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        dialog.setWindowIcon(icon)
         dialog.paintRequested.connect(target)
         dialog.exec_()
 
@@ -933,6 +1042,16 @@ class F4C(QMainWindow, Ui_MainWindow):
         end_date = "{}".format(self.dateEdit_2.date().toString('dd.MM.yyyy'))
         table = self.table
         model = table.model()
+        out_data = []
+        for i in range(model.rowCount()):
+            row = []
+            for k in range(model.columnCount()):
+                index = model.index(i, k)
+                item = model.data(index)
+                row.append(item)
+            new_row = row[0:-1]
+            new_row[0] = row[-1]
+            out_data.append(new_row)
         first = 'Первенство' if self.memberclass == 'F-4C (Ю)' else 'Чемпионат'
         ekp = self.locate_data.ekp_f4cu if self.memberclass == 'F-4C (Ю)' else self.locate_data.ekp_f4c
         content = ''
@@ -966,11 +1085,9 @@ class F4C(QMainWindow, Ui_MainWindow):
               f'<td align="center" width="7%">III тур</td>' \
               f'<td align="center" width="9%">Результат</td>' \
               f'</tr>'
-        for i in range(model.rowCount()):
+        for row in out_data:
             content = content + '<tr>'
-            for k in range(model.columnCount()):
-                index = model.index(i, k)
-                item = model.data(index)
+            for item in row:
                 content = content + f'<td align="center">{item}</td>'
             content = content + '</tr>'
         content = content + '</table>'
@@ -1226,6 +1343,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                 exec(f'self.currentmember.fig_{str(j)}[1] = self.currentmember.fig_{str(j)}[0]')
                 exec(f'self.currentmember.fig_{str(j)}[2] = self.currentmember.fig_{str(j)}[0]')
         self.memberdata.save_prog_btn.setEnabled(False)
+        self.commit_changes()
 
     def set_info(self):
         row = self.table.currentIndex().row()
@@ -1252,6 +1370,7 @@ class F4C(QMainWindow, Ui_MainWindow):
                 self.data[row][4] = self.memberdata.lineEdit_prototype.text()
                 self.data[row][11] = self.memberdata.toss_box.value()
         self.memberdata.save_info_btn.setEnabled(False)
+        self.commit_changes()
 
     def set_grades(self):
         for j in range(1, 14):
@@ -1261,6 +1380,8 @@ class F4C(QMainWindow, Ui_MainWindow):
 
         self.filling(self.currentmember.cls)
         self.grade_list()
+        self.memberdata.save_grades_btn.setEnabled(False)
+        self.commit_changes()
 
     def timetable_preview(self):
         table = self.timetable.tableView
@@ -1336,7 +1457,10 @@ class F4C(QMainWindow, Ui_MainWindow):
             new_row.append(row[11])
             for col in range(1, 7):
                 new_row.append(row[col])
-            result = row[5] + row[6]
+            if row[5] == None or row[6] == None:
+                result = 0
+            else:
+                result = row[5] + row[6]
             new_row.append(result)
             in_tosslist.append(row[11])
             in_data.append(new_row)
@@ -1373,7 +1497,10 @@ class F4C(QMainWindow, Ui_MainWindow):
             new_row = []
             for col in range(1, 8):
                 new_row.append(row[col])
-            result = row[5] + (row[6] + row[7]) / 2
+            if row[5] == None or row[6] == None or row[7] == None:
+                result = 0
+            else:
+                result = row[5] + (row[6] + row[7]) / 2
             new_row.append(result)
             res_list.append(result)
             data.append(new_row)
@@ -2154,6 +2281,7 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.calculate_static()
         self.filling(self.currentmember.cls)
         self.memberdata.save_static_btn.setEnabled(False)
+        self.commit_changes()
 
     def calculate_static(self):
         if self.memberclass == 'F-4H':
@@ -2193,6 +2321,15 @@ class F4C(QMainWindow, Ui_MainWindow):
         self.memberdata.sum_2.setText(str(sum_2))
         self.memberdata.sum_3.setText(str(sum_3))
         self.memberdata.total_score.setText(str(total))
+
+    def commit_changes(self):
+        self.saved_flag = True
+        self.action.setEnabled(True)
+        self.new_action.setEnabled(True)
+
+    def closeEvent(self, event):
+        if self.saved_flag:
+            self.save_qwestion()
 
 
 class f4cWindow(QDialog, Ui_F4C_fill):
